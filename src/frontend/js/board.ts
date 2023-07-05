@@ -160,8 +160,6 @@ export class Board {
                 });
         }
     };
-    
-    
 
     private dragOver = (e: DragEvent) => {
         e.preventDefault();
@@ -208,6 +206,8 @@ export class Board {
         });
         
         const data = e.dataTransfer?.getData('text/plain');
+        console.log('dragend');
+        console.log(data);
         const shipId = data ? +data : -1;
         const ship = this.ships.find(ship => ship.id === shipId);
 
@@ -236,6 +236,8 @@ export class Board {
         const newColumn = +target.getAttribute('data-column')!;
 
         const data = e.dataTransfer?.getData('text/plain');
+        console.log('drop');
+        console.log(data);
         const shipId = data ? +data : -1;
 
         console.log(shipId);
@@ -279,14 +281,7 @@ export class Board {
             if (shipCell) {
                 const ship = this.ships.find(ship => ship.id === shipCell.shipId);
                 if (!ship) return;
-    
-                // Store the initial positions
-                const initialShipCells = this.shipCells
-                    .filter(cell => cell.shipId === shipCell.shipId)
-                    .map(cell => ({ row: cell.row, column: cell.column, shipId: cell.shipId }));
-    
-                
-                
+
                 const newOrientation = ship.orientation === 'horizontal' ? 'vertical' : 'horizontal';
     
                 if (this.canPlaceShip(row, column, ship.size, newOrientation, ship.id)) {
@@ -294,17 +289,9 @@ export class Board {
                     this.updateShipCells(ship);
                 } 
                 else {
-    
-                    // Revert the positions of the ship cells. The following code has errors.
-                    for (let i = 0; i < initialShipCells.length; i++) {
-                        this.preemptiveBoard[initialShipCells[i].row][initialShipCells[i].column] = true;
-                        this.shipCells[i] = initialShipCells[i];
-                    }
-
-    
                     // Add a class to indicate the rotation failed to all cells of the ship
-                    const shipCells = this.shipCells.filter(cell => cell.shipId === shipCell.shipId);
-                    shipCells.forEach(shipCell => {
+                    const cellsFailed = this.shipCells.filter(cell => cell.shipId === shipCell.shipId);
+                    cellsFailed.forEach(shipCell => {
                         const cell = document.querySelector(`[data-row='${shipCell.row}'][data-column='${shipCell.column}']`);
                         if (cell) {
                             cell.classList.add('rotate-failed');
@@ -313,7 +300,7 @@ export class Board {
     
                     // Remove the class after a brief moment
                     setTimeout(() => {
-                        shipCells.forEach(shipCell => {
+                        cellsFailed.forEach(shipCell => {
                             const cell = document.querySelector(`[data-row='${shipCell.row}'][data-column='${shipCell.column}']`);
                             if (cell) {
                                 cell.classList.remove('rotate-failed');
@@ -327,7 +314,7 @@ export class Board {
     };
     
     
-    private updateShipCells(ship: { id: number, size: number, orientation: 'horizontal' | 'vertical' }) {
+    private updateShipCells(ship: { id: number, size: number, orientation: 'horizontal' | 'vertical' }) { 
         const shipCells = this.shipCells.filter(cell => cell.shipId === ship.id);
         if (shipCells.length > 0) {
             // First, clear the old cells from preemptiveBoard

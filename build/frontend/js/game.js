@@ -1,53 +1,75 @@
-import { Board } from './board';
-import { io } from 'socket.io-client';
+import { Board } from './board.js';
 export class Game {
     gameId;
     playerBoard;
-    opponentBoard;
-    playerTurn;
+    boards;
+    myTurn;
     gameOver;
     socket;
-    constructor(gameId) {
+    myPlayerNumber;
+    constructor(gameId, myPlayerNumber) {
         this.gameId = gameId;
         this.playerBoard = new Board();
-        this.opponentBoard = new Board();
-        this.playerTurn = true; // For simplicity, assume the player who created the game goes first
+        this.boards = [this.playerBoard];
+        this.myTurn = false;
         this.gameOver = false;
-        this.socket = io(gameId); // Connect to your server here
-        this.socket.on('boardUpdate', (data) => {
-            // Implement logic here to update the boards based on received data
-            // You might want to pass the data to the Board class methods
-            // to make the necessary changes
-        });
+        this.socket = new WebSocket(`ws://localhost:3050/${gameId}`);
+        this.myPlayerNumber = myPlayerNumber;
+        this.socket.onmessage = (event) => {
+            const { type, data } = JSON.parse(event.data);
+            switch (type) {
+                case 'boardUpdate':
+                    this.boards[data.playerNumber].updateBoard(data.board);
+                    this.gameOver = data.gameOver;
+                    if (this.gameOver = true) {
+                    }
+                    this.myTurn = (data.turn == myPlayerNumber);
+                    break;
+                // Handle other messages
+            }
+        };
     }
     render() {
         this.playerBoard.render();
         this.playerBoard.placeShips([{ size: 1, count: 3 }, { size: 2, count: 2 }, { size: 3, count: 1 }]);
     }
+    unrender() {
+        this.playerBoard.unrender();
+    }
+    lockBoard() {
+        this.playerBoard.lockBoard();
+    }
+    startGame() {
+        // begin game logic
+    }
+    makeMove(row, col) {
+        if (!this.myTurn) {
+            alert("Wait for your turn");
+            return;
+        }
+        const moveData = { type: "makeMove", data: { row: row, col: col } };
+        this.socket.send(JSON.stringify({ type: 'makeMove', data: { moveData } }));
+    }
     fire(row, column) {
         // Tell the server that a player has fired at a certain cell
-        this.socket.emit('fire', {
-            gameId: this.gameId,
-            row,
-            column
-        });
-    }
-    findGame() {
-        // Ask the server to find a game to join
-        this.socket.emit('findGame');
+        this.socket.send(JSON.stringify({
+            type: 'fire',
+            data: {
+                gameId: this.gameId,
+                row,
+                column
+            }
+        }));
     }
     leaveGame() {
         // Tell the server that the player has left the game
-        this.socket.emit('leaveGame', {
+        this.socket.send(JSON.stringify({
+            type: 'leaveGame',
             gameId: this.gameId
-        });
+        }));
     }
-    getBoard() {
+    getShips() {
         // This method can be used to return the current state of the player's board
         return this.playerBoard.getShips;
-    }
-    static updateBoard(board) {
-        // Here you can update your board using the data received through socket
-        // or by calculating the new state based on the current state of the game.
     }
 }

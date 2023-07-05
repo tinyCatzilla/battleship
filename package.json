@@ -11,6 +11,8 @@
     "@types/node": "^20.3.3",
     "@types/socket.io-client": "^3.0.0",
     "@types/ws": "^8.5.5",
+    "copyfiles": "^2.4.1",
+    "rimraf": "^5.0.1",
     "ts-node": "^10.9.1",
     "tsc-watch": "^6.0.4",
     "typescript": "^5.1.6"
@@ -22,9 +24,12 @@
     "ws": "^8.0.0"
   },
   "scripts": {
-    "start-backend": "tsc-watch --onSuccess \"node ./src/backend/server.js\" --project ./tsconfig.json",
-    "start-frontend": "serve ./src/frontend -s -l 5000",
+    "start-backend": "tsc-watch --onSuccess \"node ./build/backend/server.js\" --project ./tsconfig.json",
+    "start-frontend": "serve ./build/frontend -s -l 5000",
     "build-frontend": "c --project tsconfig.json",
-    "start": "concurrently \"yarn start-backend\" \"yarn build-frontend\" \"yarn start-frontend\""
+    "start": "concurrently \"yarn build\" \"yarn start-backend\" \"yarn build-frontend\" \"yarn start-frontend\"",
+    "clean": "rimraf build/",
+    "copy-files": "copyfiles --all --up 1 --exclude \"./**/*.{ts,tsx}\" \"./src/**/*\" build/",
+    "build": "yarn clean && tsc && yarn copy-files"
   }
 }

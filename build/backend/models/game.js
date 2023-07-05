@@ -1,44 +1,18 @@
 // src/backend/models/game.ts
-export const SHIP_TYPES = {
-    MINI: {
-        type: 'Mini',
-        shape: [['M']]
-    },
-    DESTROYER: {
-        type: 'Destroyer',
-        shape: [['D', 'D']]
-    },
-    SUBMARINE: {
-        type: 'Submarine',
-        shape: [['S', 'S', 'S']]
-    },
-    CRUISER: {
-        type: 'Cruiser',
-        shape: [['C'], ['C'], ['C'], ['C']]
-    }
-};
 export class Game {
-    playerBoard;
-    opponentBoard;
-    playerPreemptiveBoard;
-    opponentPreemptiveBoard;
-    playerShips;
-    opponentShips;
-    playerReady;
-    opponentReady;
-    player;
-    opponent;
-    constructor(playerId) {
-        this.player = playerId;
-        this.opponent = null;
-        this.playerBoard = null;
-        this.opponentBoard = null;
-        this.playerPreemptiveBoard = this.createEmptyBoard();
-        this.opponentPreemptiveBoard = this.createEmptyBoard();
-        this.playerShips = [];
-        this.opponentShips = [];
-        this.playerReady = false;
-        this.opponentReady = false;
+    gameId;
+    totalPlayers;
+    boards;
+    remaining;
+    playersReady;
+    playerTurn;
+    constructor(gameId) {
+        this.gameId = gameId;
+        this.totalPlayers = 1;
+        this.boards = [this.createEmptyBoard()];
+        this.remaining = [];
+        this.playersReady = 0;
+        this.playerTurn = -1;
     }
     createEmptyBoard() {
         const board = [];
@@ -51,32 +25,44 @@ export class Game {
         }
         return board;
     }
-    placeShipOnPreemptiveBoard(player, ship) {
-        const board = player === 'player' ? this.playerPreemptiveBoard : this.opponentPreemptiveBoard;
-        const { position, shape, orientation } = ship;
-        // Place ship on the pre-emptive board
-        if (orientation === 'horizontal') {
-            for (let i = 0; i < shape[0].length; i++) {
-                board[position.row][position.column + i].hasShip = true;
+    placeShips(playerNumber, shipCells = []) {
+        const board = this.boards[playerNumber];
+        // Intermediate object to store counts for each shipId
+        const shipIdCounts = {};
+        shipCells.forEach((cell) => {
+            board[cell.row][cell.column].hasShip = true;
+            // Count the number of cells for each shipId
+            if (shipIdCounts[cell.shipId] == null) {
+                shipIdCounts[cell.shipId] = 0;
             }
-        }
-        else {
-            for (let i = 0; i < shape.length; i++) {
-                board[position.row + i][position.column].hasShip = true;
-            }
-        }
+            shipIdCounts[cell.shipId]++;
+        });
+        // Convert the intermediate object into an array
+        this.remaining = Object.keys(shipIdCounts).map((key) => shipIdCounts[parseInt(key)]);
     }
-    confirmPlacement(player) {
-        if (player === 'player') {
-            this.playerReady = true;
-        }
-        else {
-            this.opponentReady = true;
-        }
-        // If both players are ready, initialize the game boards
-        if (this.playerReady && this.opponentReady) {
-            this.playerBoard = JSON.parse(JSON.stringify(this.playerPreemptiveBoard));
-            this.opponentBoard = JSON.parse(JSON.stringify(this.opponentPreemptiveBoard));
-        }
+    get getTotalPlayers() {
+        return this.totalPlayers;
+    }
+    get getPlayersReady() {
+        return this.playersReady;
     }
 }
+// playerMakesMove(playerNumber: number, row: number, col: number) {
+//     // First, check if it's the correct player's turn
+//     if (this.playerTurn !== playerNumber) {
+//       // It's not this player's turn, do nothing
+//       return;
+//     }
+//     // Get the opponent's board
+//     const opponentBoard = this.boards[this.playerTurn === 0 ? 1 : 0];
+//     // Update the cell based on the move
+//     if (opponentBoard[row][col].hasShip) {
+//       // The player hit a ship
+//       opponentBoard[row][col].isHit = true;
+//     }
+//     // Change turns
+//     this.changeTurns();
+//   }
+// changeTurns() {
+// this.playerTurn = this.playerTurn 
+// }
