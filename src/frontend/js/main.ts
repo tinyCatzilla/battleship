@@ -5,12 +5,14 @@ class GameClient {
     gameId: string;
     playerNumber: number;
     game: Game;
+    username: string;
 
     constructor() {
         this.socket = new WebSocket("ws://localhost:3050");
         this.gameId = "";
         this.playerNumber = -1; // -1 indicates that the player number has not been set
         this.game = new Game(this.gameId, this.playerNumber);
+        this.username = "";
 
         this.socket.onmessage = (event) => {
             const data = JSON.parse(event.data);
@@ -35,19 +37,19 @@ class GameClient {
 
     }
 
-    createRoom() {
+    createRoom(username: string) {
         this.displayLobbyScreen();
-
         const gameId = Array.from({length: 6}, () => String.fromCharCode(65 + Math.floor(Math.random() * 26))).join('');
         history.pushState({}, '', `/${gameId}`);
         this.socket.send(JSON.stringify({ type: 'createGame', data: {gameId: gameId}}));
         this.gameId = gameId;
         this.playerNumber = 1; // The creator of the room will be player 1
+        this.username = username;
         this.game = new Game(gameId, 1);
         this.game.render();
     }
     
-    joinRoom(id: string) {
+    joinRoom(id: string, username: string) {
         this.displayLobbyScreen();
         // Send the join room request to the server
         this.socket.send(JSON.stringify({ type: 'joinGame', data: { gameId: id } }));
@@ -59,10 +61,11 @@ class GameClient {
                 history.pushState({}, '', `/game/${id}`);
                 this.gameId = id;
                 this.playerNumber = data.playerNumber; // use the player number sent by the server
+                this.username = username;
                 this.game = new Game(id, this.playerNumber);
                 this.game.render();
             } else {
-                // Handle the case where joining the game was not su``ccessful
+                // Handle the case where joining the game was not successful
                 alert("Failed to join the game.");
             }
         };
@@ -127,21 +130,21 @@ class GameClient {
         let lobbyScreen = document.querySelector(".lobbyScreen") as HTMLElement;
         lobbyScreen?.style.setProperty("display", "block");
     }
-
 }
 
 export function initializeApp() {
     const gameClient = new GameClient();
+    const userInput = document.getElementById("username") as HTMLInputElement;
 
     const createRoomButton = document.querySelector("#createRoomButton");
     if (createRoomButton) {
-        createRoomButton.addEventListener("click", () => gameClient.createRoom());
+        createRoomButton.addEventListener("click", () => gameClient.createRoom(userInput.value));
     }
 
     const joinRoomButton = document.querySelector("#joinRoomButton");
     const roomCodeInput = document.getElementById("roomCode") as HTMLInputElement;
     if (joinRoomButton && roomCodeInput) {
-        joinRoomButton.addEventListener("click", () => gameClient.joinRoom(roomCodeInput.value));
+        joinRoomButton.addEventListener("click", () => gameClient.joinRoom(roomCodeInput.value, userInput.value));
     }
     
     const leaveRoomButton = document.querySelector("#leaveRoomButton");

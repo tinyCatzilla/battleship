@@ -11,10 +11,9 @@ export class Board {
         return { ships: this.ships, shipCells: this.shipCells };
     }
     render() {
-        const appDiv = document.getElementById("app");
-        if (!appDiv)
+        const boardDiv = document.querySelector("#gameBoard");
+        if (!boardDiv)
             return;
-        appDiv.innerHTML = '<h1>Battleship Preemptive Board</h1>';
         // Render the board as an HTML table
         const boardElement = document.createElement('table');
         this.preemptiveBoard.forEach((row, i) => {
@@ -28,16 +27,16 @@ export class Board {
             });
             boardElement.appendChild(rowElement);
         });
-        appDiv.appendChild(boardElement);
+        boardDiv.appendChild(boardElement);
         // Update the display
         this.updateDisplay();
         // Add event listeners
         this.addEventListeners();
     }
     unrender() {
-        const appDiv = document.getElementById("app");
-        if (appDiv) {
-            appDiv.innerHTML = '';
+        const boardDiv = document.querySelector("#gameBoard");
+        if (boardDiv) {
+            boardDiv.innerHTML = '';
         }
     }
     placeShips(shipConfig) {
@@ -147,7 +146,10 @@ export class Board {
         const newRow = +target.getAttribute('data-row');
         const newColumn = +target.getAttribute('data-column');
         const data = e.dataTransfer?.getData('text/plain');
-        const shipId = data !== undefined ? +data : -1;
+        const shipId = data ? +data : -1;
+        if (shipId == -1) {
+            return;
+        }
         const ship = this.ships.find(ship => ship.id === shipId);
         if (ship && this.canPlaceShip(newRow, newColumn, ship.size, ship.orientation, shipId)) {
             for (let i = 0; i < ship.size; i++) {
@@ -175,13 +177,37 @@ export class Board {
         cells.forEach((cell) => {
             cell.classList.remove('legal-move');
         });
+        const data = e.dataTransfer?.getData('text/plain');
+        const shipId = data ? +data : -1;
+        const ship = this.ships.find(ship => ship.id === shipId);
+        if (!ship)
+            return;
+        // Check if the ship was dropped in a legal position
+        const target = e.target;
+        const newRow = +target.getAttribute('data-row');
+        const newColumn = +target.getAttribute('data-column');
+        if (this.canPlaceShip(newRow, newColumn, ship.size, ship.orientation, shipId)) {
+            const shipCells = this.shipCells.filter(cell => cell.shipId === shipId);
+            if (shipCells.length > 0) {
+                shipCells.forEach(cell => {
+                    this.preemptiveBoard[cell.row][cell.column] = true;
+                });
+                this.updateDisplay();
+            }
+        }
     };
     drop = (e) => {
         e.preventDefault();
         const target = e.target;
         const newRow = +target.getAttribute('data-row');
         const newColumn = +target.getAttribute('data-column');
-        const shipId = +e.dataTransfer.getData('text/plain');
+        const data = e.dataTransfer?.getData('text/plain');
+        const shipId = data ? +data : -1;
+        console.log(shipId);
+        // Check if the dragged item is actually a ship
+        if (shipId < 0) {
+            return; // exit the function if the dragged item is not a ship
+        }
         const ship = this.ships.find(ship => ship.id === shipId);
         if (!ship)
             return;
@@ -214,19 +240,17 @@ export class Board {
                 const ship = this.ships.find(ship => ship.id === shipCell.shipId);
                 if (!ship)
                     return;
-                // Store the initial positions and orientation
-                const initialOrientation = ship.orientation;
+                // Store the initial positions
                 const initialShipCells = this.shipCells
                     .filter(cell => cell.shipId === shipCell.shipId)
                     .map(cell => ({ row: cell.row, column: cell.column, shipId: cell.shipId }));
                 const newOrientation = ship.orientation === 'horizontal' ? 'vertical' : 'horizontal';
-                ship.orientation = newOrientation;
                 if (this.canPlaceShip(row, column, ship.size, newOrientation, ship.id)) {
+                    ship.orientation = newOrientation;
                     this.updateShipCells(ship);
                 }
                 else {
-                    ship.orientation = initialOrientation;
-                    // Revert the positions and orientation of the ship
+                    // Revert the positions of the ship cells. The following code has errors.
                     for (let i = 0; i < initialShipCells.length; i++) {
                         this.preemptiveBoard[initialShipCells[i].row][initialShipCells[i].column] = true;
                         this.shipCells[i] = initialShipCells[i];

@@ -101,11 +101,25 @@ table {
     border-collapse: collapse;
 }
 
+#gameBoard {
+    background-color: var(--board-bg);
+    transform: translate(-50%, -50%);
+    webkit-transform: translate(-50%, -50%);
+    ms-transform: translate(-50%, -50%);
+    position: absolute;
+    top: 50%;
+    left: 50%;
+}
+
 .board-cell {
-    width: 30px;
-    height: 30px;
-    border: 1px solid black;
+    /* width: 30px;
+    height: 30px; */
+    width: 2.5vw;
+    height: 2.5vw;
+
+    border: 1px solid rgba(0, 0, 0, 0.301);
     text-align: center;
+    background-color: var(--board-bg);
 }
 
 .ship {
@@ -123,6 +137,14 @@ table {
     border: 2px solid red;
 }
 
-.lobbyScreen, .gameScreen {
+.lobbyScreen {
     display: none;
 }
+
+#leaveRoomButton {
+    position: absolute;
+    top: 0;
+    right: 0;
+    margin: 10px;
+}
+
