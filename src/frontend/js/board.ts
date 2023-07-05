@@ -206,8 +206,7 @@ export class Board {
         });
         
         const data = e.dataTransfer?.getData('text/plain');
-        console.log('dragend');
-        console.log(data);
+
         const shipId = data ? +data : -1;
         const ship = this.ships.find(ship => ship.id === shipId);
 
@@ -236,11 +235,8 @@ export class Board {
         const newColumn = +target.getAttribute('data-column')!;
 
         const data = e.dataTransfer?.getData('text/plain');
-        console.log('drop');
-        console.log(data);
         const shipId = data ? +data : -1;
 
-        console.log(shipId);
 
         // Check if the dragged item is actually a ship
         if (shipId < 0) {
@@ -274,11 +270,21 @@ export class Board {
         const columnAttr = target.getAttribute('data-column');
     
         if (rowAttr !== null && columnAttr !== null) {
-            const row = +rowAttr;
-            const column = +columnAttr;
+            var row = +rowAttr;
+            var column = +columnAttr;
             const shipCell = this.shipCells.find(cell => cell.row === row && cell.column === column);
-    
-            if (shipCell) {
+            if (!shipCell) return;
+            else {
+                const shipCells = this.shipCells.filter(cell => cell.shipId === shipCell.shipId)
+                let min = Number.MAX_VALUE;
+                for(var cell of shipCells) {
+                    if (cell.row + cell.column < min) {
+                        row = cell.row;
+                        column = cell.column;
+                        min = cell.row + cell.column;
+                    }
+                }
+
                 const ship = this.ships.find(ship => ship.id === shipCell.shipId);
                 if (!ship) return;
 
