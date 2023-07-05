@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Battleship Game</title>
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+
+<body>
+    <input type="text" id="roomCode" placeholder="Enter room code">
+    <button onclick="joinRoom()">Join Room</button>
+    <button onclick="createRoom()">Create Room</button>
+    <button id="confirmButton" onclick="confirmPlacement()" disabled>Confirm Placement</button>
+    <div id="gameBoard"></div>
+    
+    <div id="app">
+        <!-- The game board and UI elements will be rendered here -->
+    </div>
+    <script>var exports = {};</script>
+    <script type="module" src="js/main.js"></script>
+    <script type="module" src="js/game.js"></script>
+</body>
+
+</html>
