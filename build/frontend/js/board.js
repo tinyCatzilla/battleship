@@ -37,6 +37,7 @@ export class Board {
         const boardDiv = document.querySelector("#gameBoard");
         if (boardDiv) {
             boardDiv.innerHTML = '';
+            boardDiv.textContent = '';
         }
     }
     placeShips(shipConfig) {
@@ -115,6 +116,8 @@ export class Board {
         });
     }
     dragStart = (e) => {
+        if (this.locked)
+            return;
         const target = e.target;
         const row = +target.getAttribute('data-row');
         const column = +target.getAttribute('data-column');
@@ -167,6 +170,8 @@ export class Board {
                 }
             }
         }
+        // TODO: make it so that dragging off screen will place the ship at the edge
+        // and also it renders weird right now so fix that too
     };
     dragLeave = (e) => {
         const target = e.target;

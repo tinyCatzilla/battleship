@@ -25,11 +25,13 @@
   },
   "scripts": {
     "start-backend": "tsc-watch --onSuccess \"node ./build/backend/server.js\" --project ./tsconfig.json",
+    "start-backend2": "tsc-watch --onSuccess \"nodemon ./build/backend/server.js\" --project ./tsconfig.json",
     "start-frontend": "serve ./build/frontend -s -l 5000",
     "build-frontend": "c --project tsconfig.json",
     "start": "concurrently \"yarn build\" \"yarn start-backend\" \"yarn build-frontend\" \"yarn start-frontend\"",
     "clean": "rimraf build/",
     "copy-files": "copyfiles --all --up 1 --exclude \"./**/*.{ts,tsx}\" \"./src/**/*\" build/",
-    "build": "yarn clean && tsc && yarn copy-files"
+    "build": "yarn clean && tsc && yarn copy-files",
+    "dev": "concurrently \"yarn build\" \"yarn start-backend\" \"yarn build-frontend\" \"yarn start-frontend\""
   }
 }

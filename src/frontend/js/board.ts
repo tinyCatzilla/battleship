@@ -43,6 +43,7 @@ export class Board {
         const boardDiv = document.querySelector("#gameBoard");
         if (boardDiv) {
             boardDiv.innerHTML = '';
+            boardDiv.textContent = '';
         }
     }
 
@@ -133,6 +134,8 @@ export class Board {
     
 
     private dragStart = (e: DragEvent) => {
+        if (this.locked) return;
+
         const target = e.target as HTMLElement;
         const row = +target.getAttribute('data-row')!;
         const column = +target.getAttribute('data-column')!;
@@ -152,12 +155,12 @@ export class Board {
     
             // Remove the 'rotate-failed' class from all cells of the ship
             this.shipCells.filter(cell => cell.shipId === shipCell.shipId)
-                .forEach(cell => {
-                    const cellElement = document.querySelector(`[data-row='${cell.row}'][data-column='${cell.column}']`);
-                    if (cellElement) {
-                        cellElement.classList.remove('rotate-failed');
-                    }
-                });
+            .forEach(cell => {
+                const cellElement = document.querySelector(`[data-row='${cell.row}'][data-column='${cell.column}']`);
+                if (cellElement) {
+                    cellElement.classList.remove('rotate-failed');
+                }
+            });
         }
     };
 
@@ -192,6 +195,8 @@ export class Board {
                 }
             }
         }
+        // TODO: make it so that dragging off screen will place the ship at the edge
+        // and also it renders weird right now so fix that too
     };
 
     private dragLeave = (e: DragEvent) => {

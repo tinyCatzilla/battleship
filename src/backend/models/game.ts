@@ -12,12 +12,24 @@ export type Cell = {
     isHit: boolean;
 };
 
-export type Board = Cell[][];
+export class Board {
+    board: Cell[][];
+
+    constructor() {
+        this.board = [];
+        for (let i = 0; i < 8; i++) {
+            this.board[i] = [];
+            for (let j = 0; j < 8; j++) {
+                this.board [i][j] = { hasShip: false, isHit: false };
+            }
+        }
+    }
+}
 
 export class Game {
     gameId: string;
     totalPlayers: number;
-    boards: Board[];
+    boards: Cell[][][];
     remaining: number[];
     playersReady: number;
     playerTurn: number;
@@ -26,27 +38,18 @@ export class Game {
     constructor(gameId: string) {
         this.gameId = gameId;
         this.totalPlayers = 1;
-        this.boards = [this.createEmptyBoard()];
+        let player0 = new Board();
+        let player1 = new Board();
+        this.boards = [player0.board, player1.board];
+        // note that player0 isnt real.
         this.remaining = [];
         this.playersReady = 0;
         this.playerTurn = -1;
     }
 
-    createEmptyBoard(): Board {
-        const board: Board = [];
-        for (let i = 0; i < 8; i++) {
-            const row: Cell[] = [];
-            for (let j = 0; j < 8; j++) {
-                row.push({ hasShip: false, isHit: false });
-            }
-            board.push(row);
-        }
-        return board;
-    }
-
     placeShips(playerNumber: number, shipCells: { row: number, column: number, shipId: number }[] = []) {
-        const board = this.boards[playerNumber];
-    
+        let board = this.boards[playerNumber];
+
         // Intermediate object to store counts for each shipId
         const shipIdCounts: { [shipId: number]: number } = {};
     

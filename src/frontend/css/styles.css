@@ -10,6 +10,7 @@
 
     --font-main: 1.2rem;
     --font-large: 1.7rem;
+    --font-larger: 2rem;
     --font-huge: 2.5rem;
 }
 
@@ -23,8 +24,17 @@ body, html {
     background-color: var(--main-bg);
 }
 
+body {
+    display: flex;
+    flex-direction: column;
+}
+
 .main {
-    padding: 10px 30px 10px 30px;
+    margin: 10px 30px 10px 30px;
+    /* height: calc(100% - 150px); */
+    flex-grow: 1;
+    display:flex;
+    padding-top: 50px;
 }
 
 .titleScreen {
@@ -85,11 +95,6 @@ input[type=text] { flex-grow: 1; }
 }
 
 
-.logo {
-    color: var(--accent);
-    font-size: var(--font-huge);
-}
-
 #app {
     display: flex;
     justify-content: center;
@@ -139,12 +144,64 @@ table {
 
 .lobbyScreen {
     display: none;
+    flex-grow: 1;
+}
+
+#leaveRoomButton, .logo {
+    margin: 10px 30px 10px 30px;
+    position: absolute;
+    top: 0;
 }
 
 #leaveRoomButton {
-    position: absolute;
-    top: 0;
     right: 0;
-    margin: 10px;
 }
 
+.logo {
+    color: var(--accent);
+    font-size: var(--font-huge);
+    left: 0;
+}
+
+
+.lobbyMain {
+    /* 3 columns  */
+    display: grid;
+    grid-template-columns: 1fr 2fr 1fr;
+    flex-grow: 1;
+    /* background:orange; */
+}
+
+.leftSide {
+    /* background-color: red; */
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+}
+.lobbyCode{
+    color: var(--text-light);
+    font-size: var(--font-larger);
+    /* margin-bottom: 50px; */
+    margin-bottom: 60px;
+    flex-shrink:0;
+    border-bottom: 2px solid var(--main-bg);
+}
+#lobbyCode {
+    color: var(--accent);
+}
+.playerList {
+    color: var(--text-light);
+    font-size: var(--font-large);
+}
+.player {
+    margin-bottom: 10px;
+}
+
+.centreSide {
+    /* background-color: blue; */
+}
+
+.rightSide {
+    /* background-color: green; */
+}

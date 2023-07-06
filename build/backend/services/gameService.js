@@ -1,19 +1,32 @@
 // src/backend/services/gameService.ts
 import { Game } from '../models/game.js';
+import { Board } from '../models/game.js';
 export class GameService {
     games;
+    usernames;
     constructor() {
         this.games = new Map();
+        this.usernames = new Map();
     }
-    createGame(gameId) {
+    createGame(gameId, username) {
         const game = new Game(gameId);
         this.games.set(gameId, game);
+        if (!this.usernames.has(gameId)) {
+            this.usernames.set(gameId, [username]);
+            return;
+        }
+        this.usernames.get(gameId).push(username);
     }
-    joinGame(gameId) {
+    joinGame(gameId, username) {
         const game = this.games.get(gameId);
         if (game) {
             game.totalPlayers += 1;
-            game.boards.push(game.createEmptyBoard());
+            var newplayer = new Board();
+            game.boards.push(newplayer.board);
+            if (!this.usernames.has(gameId)) {
+                console.log('fatal error: usernames map does not have gameId key');
+            }
+            this.usernames.get(gameId).push(username);
             return {
                 success: true,
                 playerNumber: game.totalPlayers
@@ -51,10 +64,10 @@ export class GameService {
         }
         return false;
     }
-    getTotalPlayers(gameId) {
-        const game = this.games.get(gameId);
-        return game ? game.getTotalPlayers : 0;
-    }
+    // getTotalPlayers(gameId: string): number {
+    //     const game = this.games.get(gameId);
+    //     return game ? game.getTotalPlayers : 0;
+    // }
     getPlayersReady(gameId) {
         const game = this.games.get(gameId);
         return game ? game.getPlayersReady : 0;
