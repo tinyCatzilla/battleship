@@ -118,6 +118,10 @@ class GameClient {
                 this.game.lockBoard();
                 this.lockConfirmPlacementButton();
                 console.log('board locked');
+                const readyButton = document.querySelector("#readyButton");
+                readyButton.textContent = "Waiting for other players"; // set readybutton text to Waiting for other players
+                readyButton.classList.add("btnGreenSelected"); // set readbutton to have class btnRedSelected
+                readyButton.classList.remove("btnGreen"); // remove btnRed class from readybutton
                 if (data.start == true) {
                     this.game.startGame();
                     console.log('all players ready, starting game');

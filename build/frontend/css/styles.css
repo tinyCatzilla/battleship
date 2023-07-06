@@ -4,6 +4,11 @@
     --accent-clear: #e9c5332f;
     --board-bg: #d3dce3;
 
+    --accent-red: #e94c33;
+    --accent-red-clear: #e94c332f;
+    --accent-green: #4acf5c;
+    --accent-green-clear: #4acf5c2c;
+
     --text-main: #1f1f1f;
     --text-secondary: rgb(110, 110, 110);
     --text-light: #d3dce3;
@@ -62,7 +67,6 @@ input[type=text] { flex-grow: 1; }
 .menuText, .menuButton {
     font-family: 'Rubik', sans-serif;
     font-size: 1.2rem;
-    border: 2px solid var(--accent);
     border-radius: 3px;
 }
 
@@ -72,26 +76,53 @@ input[type=text] { flex-grow: 1; }
     padding: 5px 8px 5px 8px;
     background: none;
     margin: 0 5px 0 5px;
-    
+    border: 2px solid var(--accent);
 }
 
 .menuButton {
-    color: var(--accent);
-    background-color: var(--accent-clear);
     padding: 5px 8px 5px 8px;
     margin: 0 5px 0 5px;
     cursor: pointer;
     transition: 0.3s ease-out;
 }
 
-.menuButton:hover, .menuButton:focus {
+.btnYellow {
+    color: var(--accent);
+    background-color: var(--accent-clear);
+    border: 2px solid var(--accent);
+}
+.btnYellow:hover, .btnYellow:focus {
     background-color: var(--accent);
     color: var(--main-bg);
+    box-shadow: 0 0 0px 3px var(--accent-clear);
 }
-
-.menuText:focus, .menuButton:focus {
+.menuText:focus, .btnYellow:focus {
     outline: none;
     box-shadow: 0 0 0px 3px var(--accent-clear);
+}
+
+.btnRed {
+    color: var(--accent-red);
+    background-color: var(--accent-red-clear);
+    border: 2px solid var(--accent-red);
+}
+.btnRed:hover, .btnRed:focus, .btnRedSelected {
+    background-color: var(--accent-red);
+    color: var(--main-bg);
+    border: 2px solid var(--accent-red);
+    box-shadow: 0 0 0px 3px var(--accent-red-clear);
+}
+
+.btnGreen {
+    color: var(--accent-green);
+    background-color: var(--accent-green-clear);
+    border: 2px solid var(--accent-green);
+}
+.btnGreen:hover, .btnGreen:focus, .btnGreenSelected {
+    background-color: var(--accent-green);
+    border: 2px solid var(--accent-green);
+    color: var(--main-bg);
+    box-shadow: 0 0 0px 3px var(--accent-green-clear);
 }
 
 
@@ -107,20 +138,21 @@ table {
 }
 
 #gameBoard {
-    background-color: var(--board-bg);
-    transform: translate(-50%, -50%);
+    margin-bottom: 20px;
+    /* background-color: var(--board-bg); */
+    /*transform: translate(-50%, -50%);
     webkit-transform: translate(-50%, -50%);
     ms-transform: translate(-50%, -50%);
     position: absolute;
     top: 50%;
-    left: 50%;
+    left: 50%; */
 }
 
 .board-cell {
     /* width: 30px;
     height: 30px; */
-    width: 2.5vw;
-    height: 2.5vw;
+    width: 3vw;
+    height: 3vw;
 
     border: 1px solid rgba(0, 0, 0, 0.301);
     text-align: center;
@@ -163,6 +195,10 @@ table {
     left: 0;
 }
 
+.gameScreen {
+    display: none;
+}
+
 
 .lobbyMain {
     /* 3 columns  */
@@ -189,6 +225,7 @@ table {
 }
 #lobbyCode {
     color: var(--accent);
+    cursor: pointer;
 }
 .playerList {
     color: var(--text-light);
@@ -199,7 +236,10 @@ table {
 }
 
 .centreSide {
-    /* background-color: blue; */
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
 }
 
 .rightSide {

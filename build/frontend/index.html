@@ -25,15 +25,15 @@
                 </div>
                 <div class="menuDiv">
                     <input type="text" id="roomCode" placeholder="enter room code" class="menuText">
-                    <button id="joinRoomButton" class="menuButton">Join Room</button>
+                    <button id="joinRoomButton" class="menuButton btnYellow">Join Room</button>
                 </div>
                 <div class="menuDiv">
-                    <button id="createRoomButton" class="menuFullWidth menuButton">Create Room</button>
+                    <button id="createRoomButton" class="menuFullWidth menuButton btnYellow">Create Room</button>
                 </div>
             </div>
 
             <div class="lobbyScreen">
-                <button id="leaveRoomButton" class="menuButton">Leave Room</button>
+                <button id="leaveRoomButton" class="menuButton btnYellow">Leave Room</button>
                 
                 <div class="lobbyMain">
                     <div class="leftSide">
@@ -47,25 +47,17 @@
 
                     <div class="centreSide">
                         <div id="gameBoard"></div>
-                        <button id="readyButton">Ready</button>
+                        <button id="readyButton" class="menuButton btnGreen">Ready</button>
                     </div>
 
                     <div class="rightSide">
                     </div>
                 </div>
-                
-                
             </div>
 
-
-
-
-            <div class="gameScreen">
+            <!-- <div class="gameScreen">
                     
-            </div>
-            
-            
-
+            </div> -->
             <!-- <div id="totalPlayers">Total Players: 0</div>
             <div id="playersReady">Players Ready: 0</div>
             <div id="playerTurn">Player Turn: 0</div> -->
@@ -75,6 +67,12 @@
         <script type="module">
             import { initializeApp } from './js/main.js';
             initializeApp();
+        </script>
+        <script>
+            function copyLobbyCode() {
+                var copyText = document.getElementById("lobbyCode");
+                navigator.clipboard.writeText(copyText.innerText);
+            }
         </script>
     </body>
 
