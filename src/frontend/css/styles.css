@@ -101,8 +101,10 @@ input[type=text] { flex-grow: 1; }
     box-shadow: 0 0 0px 3px var(--accent-clear);
 }
 
-.btnRed {
+.txtRed, .btnRed {
     color: var(--accent-red);
+}
+.btnRed {
     background-color: var(--accent-red-clear);
     border: 2px solid var(--accent-red);
 }
@@ -113,8 +115,10 @@ input[type=text] { flex-grow: 1; }
     box-shadow: 0 0 0px 3px var(--accent-red-clear);
 }
 
-.btnGreen {
+.txtGreen, .btnGreen {
     color: var(--accent-green);
+}
+.btnGreen {
     background-color: var(--accent-green-clear);
     border: 2px solid var(--accent-green);
 }
