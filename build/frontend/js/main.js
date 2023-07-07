@@ -50,10 +50,13 @@ class GameClient {
                 if (data.type === 'createGame') {
                     this.usernames = data.usernames;
                     console.log('usernames:', this.usernames);
+                    this.updateUsers();
                 }
             };
             this.game = new Game(gameId, 1);
             this.game.render();
+            const lobbyCode = document.querySelector("#lobbyCode");
+            lobbyCode.textContent = `${gameId}`;
         }
     }
     joinRoom(id, username) {
@@ -77,8 +80,11 @@ class GameClient {
                     this.username = username;
                     this.usernames = data.usernames;
                     console.log('usernames:', this.usernames);
+                    this.updateUsers();
                     this.game = new Game(id, this.playerNumber);
                     this.game.render();
+                    const lobbyCode = document.querySelector("#lobbyCode");
+                    lobbyCode.textContent = `${id}`;
                 }
                 else {
                     // Handle the case where joining the game was not successful
@@ -107,6 +113,24 @@ class GameClient {
             }
             // TODO IMPORTANT: PLAYER 1 LEAVING
         };
+    }
+    updateUsers() {
+        const playerListDiv = document.querySelector(".playerList");
+        playerListDiv.innerHTML = "";
+        for (let i = 0; i < this.usernames.length; i++) {
+            const playerDiv = document.createElement("div");
+            playerDiv.classList.add("player");
+            playerDiv.textContent = this.usernames[i][0];
+            if (this.usernames[i][1] == "ready") {
+                playerDiv.classList.remove("txtRed");
+                playerDiv.classList.add("txtGreen");
+            }
+            else {
+                playerDiv.classList.remove("txtGreen");
+                playerDiv.classList.add("txtRed");
+            }
+            playerListDiv.appendChild(playerDiv);
+        }
     }
     confirmPlacement() {
         // Send a message to the backend indicating that the player has confirmed their placement

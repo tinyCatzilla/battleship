@@ -3,6 +3,8 @@ import { Game } from '../models/game.js';
 import { Board } from '../models/game.js';
 export class GameService {
     games;
+    // usernames: Map<string, string[]>;
+    // make username a map, where the key is gameId and the value is an array of arrays of usernames and statuses
     usernames;
     constructor() {
         this.games = new Map();
@@ -12,10 +14,10 @@ export class GameService {
         const game = new Game(gameId);
         this.games.set(gameId, game);
         if (!this.usernames.has(gameId)) {
-            this.usernames.set(gameId, [username]);
+            this.usernames.set(gameId, [[username, 'notReady']]);
             return;
         }
-        this.usernames.get(gameId).push(username);
+        // this.usernames.get(gameId)!.push(username);
     }
     joinGame(gameId, username) {
         const game = this.games.get(gameId);
@@ -26,7 +28,7 @@ export class GameService {
             if (!this.usernames.has(gameId)) {
                 console.log('fatal error: usernames map does not have gameId key');
             }
-            this.usernames.get(gameId).push(username);
+            this.usernames.get(gameId).push([username, 'notReady']);
             return {
                 success: true,
                 playerNumber: game.totalPlayers
@@ -56,6 +58,7 @@ export class GameService {
         const game = this.games.get(gameId);
         if (game) {
             game.playersReady += 1;
+            this.usernames.get(gameId)[playerNumber][1] = 'ready';
             game.placeShips(playerNumber, shipCells);
             if (game.playersReady === game.totalPlayers && game.totalPlayers > 1) {
                 game.playerTurn = 1;
