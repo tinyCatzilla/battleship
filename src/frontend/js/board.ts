@@ -3,6 +3,8 @@ export class Board {
     private ships: { id: number, size: number, orientation: 'horizontal' | 'vertical' }[] = [];
     private preemptiveBoard: boolean[][];
     private locked: boolean = false;
+    private dragStart_cell: { row: number, column: number } | undefined = undefined;
+    private dragStart_diff: number = 0;
     
     constructor() {
         // Initialize an empty board
@@ -141,8 +143,23 @@ export class Board {
         const column = +target.getAttribute('data-column')!;
     
         const shipCell = this.shipCells.find(cell => cell.row === row && cell.column === column);
+        if (!shipCell) { return; }
+        this.dragStart_cell = shipCell
+
         if (shipCell) {
             e.dataTransfer!.setData('text/plain', shipCell.shipId.toString());
+            const data = e.dataTransfer?.getData('text/plain');
+            console.log(data);
+            const shipId = data ? +data : -1;
+            if (shipId == -1) { return; }
+            console.log(this.dragStart_diff);
+            console.log('dragStart');
+    
+    
+            const shipCells = this.shipCells.filter(cell => cell.shipId === shipId);
+            this.dragStart_diff = shipCell.row + shipCell.column - shipCells[0].row - shipCells[0].column;
+            console.log(this.dragStart_diff);
+            console.log('dragStart');
     
             // Hide the ship at its old position
             this.shipCells.filter(cell => cell.shipId === shipCell.shipId)
@@ -168,29 +185,33 @@ export class Board {
         e.preventDefault();
         
         const cells = document.querySelectorAll<HTMLTableCellElement>('.board-cell');
+        console.log(cells);
         cells.forEach(cell => cell.classList.remove('legal-move'));
     
         const target = e.target as HTMLElement;
-        const newRow = +target.getAttribute('data-row')!;
-        const newColumn = +target.getAttribute('data-column')!;
+        var cellRow = +target.getAttribute('data-row')!;
+        var cellColumn = +target.getAttribute('data-column')!;
         const data = e.dataTransfer?.getData('text/plain');
         const shipId = data ? +data : -1;
         if (shipId == -1) { return; }
         const ship = this.ships.find(ship => ship.id === shipId);
-    
-        if (ship && this.canPlaceShip(newRow, newColumn, ship.size, ship.orientation, shipId)) {
+        if (!ship) { return; }
+        if (ship.orientation === 'horizontal') {
+            var cellColumn = cellColumn - this.dragStart_diff;
+        } else {
+            var cellRow = cellRow - this.dragStart_diff;
+        }
+        if (this.canPlaceShip(cellRow, cellColumn, ship.size, ship.orientation, shipId)) {
             for (let i = 0; i < ship.size; i++) {
-                let cellRow = newRow;
-                let cellColumn = newColumn;
-    
+                var newRow = cellRow;
+                var newColumn = cellColumn;
                 if (ship.orientation === 'horizontal') {
-                    cellColumn += i;
+                    newColumn += i;
                 } else {
-                    cellRow += i;
+                    newRow += i;
                 }
-    
-                if (cellRow >= 0 && cellRow < 8 && cellColumn >= 0 && cellColumn < 8) {
-                    const cell = cells[cellRow * 8 + cellColumn];
+                if (newRow >= 0 && newRow < 8 && newColumn >= 0 && newColumn < 8) {
+                    const cell = cells[newRow * 8 + newColumn];
                     cell.classList.add('legal-move');
                 }
             }
@@ -211,7 +232,6 @@ export class Board {
         });
         
         const data = e.dataTransfer?.getData('text/plain');
-
         const shipId = data ? +data : -1;
         const ship = this.ships.find(ship => ship.id === shipId);
 
@@ -219,10 +239,17 @@ export class Board {
 
         // Check if the ship was dropped in a legal position
         const target = e.target as HTMLElement;
-        const newRow = +target.getAttribute('data-row')!;
-        const newColumn = +target.getAttribute('data-column')!;
-        if (this.canPlaceShip(newRow, newColumn, ship.size, ship.orientation, shipId)) {
-            const shipCells = this.shipCells.filter(cell => cell.shipId === shipId);
+        var newRow = +target.getAttribute('data-row')!;
+        var newColumn = +target.getAttribute('data-column')!;
+        const shipCells = this.shipCells.filter(cell => cell.shipId === shipId)
+        var cellRow = newRow;
+        var cellColumn = newColumn;
+        if (ship.orientation === 'horizontal') {
+            var cellColumn = newColumn - this.dragStart_diff;
+        } else {
+            var cellRow = newRow - this.dragStart_diff;
+        }
+        if (this.canPlaceShip(cellRow, cellColumn, ship.size, ship.orientation, shipId)) {
             if (shipCells.length > 0) {
                 shipCells.forEach(cell => {
                     this.preemptiveBoard[cell.row][cell.column] = true;
@@ -236,8 +263,8 @@ export class Board {
         e.preventDefault();
 
         const target = e.target as HTMLElement;
-        const newRow = +target.getAttribute('data-row')!;
-        const newColumn = +target.getAttribute('data-column')!;
+        var newRow = +target.getAttribute('data-row')!;
+        var newColumn = +target.getAttribute('data-column')!;
 
         const data = e.dataTransfer?.getData('text/plain');
         const shipId = data ? +data : -1;
@@ -249,15 +276,19 @@ export class Board {
         }
 
         const ship = this.ships.find(ship => ship.id === shipId);
-
         if (!ship) return;
-    
-        // Check if new placement is valid
-        if (this.canPlaceShip(newRow, newColumn, ship.size, ship.orientation, shipId)) {
-            const shipCells = this.shipCells.filter(cell => cell.shipId === shipId);
+        const shipCells = this.shipCells.filter(cell => cell.shipId === shipId)
+        var cellRow = newRow;
+        var cellColumn = newColumn;
+        if (ship.orientation === 'horizontal') {
+            var cellColumn = newColumn - this.dragStart_diff;
+        } else {
+            var cellRow = newRow - this.dragStart_diff;
+        }
+        if (this.canPlaceShip(cellRow, cellColumn, ship.size, ship.orientation, shipId)) {
             if (shipCells.length > 0) {
-                shipCells[0].row = newRow;
-                shipCells[0].column = newColumn;
+                shipCells[0].row = cellRow;
+                shipCells[0].column = cellColumn;
             }
             this.updateShipCells(ship);
             this.updateDisplay();
