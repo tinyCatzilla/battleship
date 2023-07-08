@@ -73,7 +73,9 @@ wss.on('connection', (ws: WS) => {
                         console.log('startGame result:', startGame);
                         ws.send(JSON.stringify({ type: 'startGame', totalPlayers: totalPlayers, turn: startGame.turn}));
                         console.log('sent startGame result to client');
+                        break;
                     case 'fire':
+                        console.log('fire data:', data);
                         // Assuming data is { gameId, opponentNumber, cell }
                         const fireResult = service.fire(data.gameId, data.opponentNumber, data.cell);
                         console.log('fire result:', fireResult);

@@ -36,6 +36,10 @@ export class Game {
         this.playerBoard.placeInitialShips([{ size: 1, count: 3 }, { size: 2, count: 2 }, { size: 3, count: 1 }]);
     }
 
+    rendersmall() {
+        this.playerBoard.rendersmall();
+    }
+
     unrender() {
         this.playerBoard.unrender();
     }
@@ -48,7 +52,7 @@ export class Game {
         // Tell the server that the game has started
         this.socket.send(JSON.stringify({
             type: 'startGame',
-            gameId: this.gameId
+            data: {gameId: this.gameId}
         }));
         this.socket.onmessage = (event) => {
             const data = JSON.parse(event.data);
@@ -61,7 +65,7 @@ export class Game {
                 }
             }
         };
-        this.unrender();
+        this.rendersmall();
         this.playerBoard.startGame();
     }
 

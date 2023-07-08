@@ -390,7 +390,7 @@ export class Board {
     }
 
     rendersmall() {
-        const boardDiv = document.querySelector("#gameBoard");
+        const boardDiv = document.querySelector(".boardGrid");
         if (!boardDiv) return;
         // Render the board as an HTML table
         const boardElement = document.createElement('table');
@@ -406,9 +406,13 @@ export class Board {
             boardElement.appendChild(rowElement);
         });
         boardDiv.appendChild(boardElement); // Add the board to the DOM
-        this.updateDisplay(); // Update the display
-        this.addEventListeners(); // Add event listeners
+        this.smallEventListeners(); // Add event listeners
     }
+
+    smallEventListeners() {
+    }
+
+    
 
     hitCell(cell: { row: number, column: number, shipId: number }) {
         const htmlcells = document.querySelectorAll<HTMLTableCellElement>('.board-cell');
