@@ -48,7 +48,7 @@ export class Game {
     }
 
     startGame() {
-        // begin game logic
+        this.playerBoard.startGame();
     }
 
     makeMove(row: number, col: number) {
