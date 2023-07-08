@@ -114,9 +114,11 @@ export class Board {
             
             // Clear previous ship class
             cell.classList.remove('ship');
+            cell.setAttribute('draggable', 'false');
 
             if (this.preemptiveBoard[row][column] === true) {
                 cell.classList.add('ship');
+                cell.setAttribute('draggable', 'true');
             }
         });
     }
@@ -124,7 +126,6 @@ export class Board {
     private addEventListeners() {
         const cells = document.querySelectorAll<HTMLTableCellElement>('.board-cell');
         cells.forEach((cell) => {
-            cell.setAttribute('draggable', 'true');
             cell.addEventListener('dragstart', this.dragStart);
             cell.addEventListener('dragover', this.dragOver);
             cell.addEventListener('dragleave', this.dragLeave);
