@@ -1,15 +1,19 @@
-import { get } from "http";
+export type Cell = {
+    hasShip: boolean;
+    isHit: boolean;
+};
 
 export class Board {
     private allshipCells: { row: number, column: number, shipId: number }[] = []; // Stores the cells that have ships
     private ships: { id: number, size: number, orientation: 'horizontal' | 'vertical' }[] = []; // Stores ship metadata
-    private shipBoard: boolean[][]; // Stores the board as a 2D array of booleans, true if the cell has a ship
+    private shipBoard: Cell[][]; // Stores the board as a 2D array of Cells, to synchronise with the server
     private locked: boolean = false; // Whether the board is locked for editing
     private dragStart_diff: number = 0; // Difference between the drag start cell and the first cell of the ship
+    private gameIsOver: boolean = false; // Whether this player's game is over
     
     constructor() {
         // Initialize an empty board
-        this.shipBoard = Array.from({ length: 8 }, () => Array(8).fill(false));
+        this.shipBoard = Array.from({ length: 8 }, () => Array.from({ length: 8 }, () => ({ hasShip: false, isHit: false })));
     }
     
     get getShips() {
@@ -62,7 +66,7 @@ export class Board {
                 return false;
             }
     
-            if (this.shipBoard[cellRow][cellColumn] === true) {
+            if (this.shipBoard[cellRow][cellColumn].hasShip) {
                 const shipCell = this.getShipCell(cellRow, cellColumn);
                 if (!shipCell || shipCell.shipId !== movingShipId) {
                     return false;
@@ -108,7 +112,7 @@ export class Board {
                 cellRow += i;
             }
     
-            this.shipBoard[cellRow][cellColumn] = true;
+            this.shipBoard[cellRow][cellColumn].hasShip = true;
             this.allshipCells.push({ row: cellRow, column: cellColumn, shipId: currentShipId });
         }
         this.ships.push({ id: currentShipId, size: size, orientation: orientation });
@@ -124,7 +128,7 @@ export class Board {
             cell.classList.remove('ship');
             cell.setAttribute('draggable', 'false');
 
-            if (this.shipBoard[row][column] === true) {
+            if (this.shipBoard[row][column].hasShip) {
                 cell.classList.add('ship');
                 cell.setAttribute('draggable', 'true');
             }
@@ -136,7 +140,7 @@ export class Board {
         if (shipCells.length > 0) {
             // Clears the old cells from shipBoard
             for (let cell of shipCells) {
-                this.shipBoard[cell.row][cell.column] = false;
+                this.shipBoard[cell.row][cell.column].hasShip = false;
             }
             const firstCell = shipCells[0];
             for (let i = 0; i < ship.size; i++) {
@@ -151,7 +155,7 @@ export class Board {
                 if (i < shipCells.length) {
                     shipCells[i].row = cellRow;
                     shipCells[i].column = cellColumn;
-                    this.shipBoard[cellRow][cellColumn] = true;
+                    this.shipBoard[cellRow][cellColumn].hasShip = true;
                 }
             }
         }
@@ -223,7 +227,7 @@ export class Board {
 
         // Hide the ship at its old position
         this.getShipCells(shipCell.shipId)
-            .forEach(cell => this.shipBoard[cell.row][cell.column] = false);
+            .forEach(cell => this.shipBoard[cell.row][cell.column].hasShip = false);
         this.updateDisplay();
 
         // Hide the drag image
@@ -385,7 +389,48 @@ export class Board {
         // disable click event handlers for player board
     }
 
-   updateBoard(board: Board) {
-        // will update from socket
+    rendersmall() {
+        const boardDiv = document.querySelector("#gameBoard");
+        if (!boardDiv) return;
+        // Render the board as an HTML table
+        const boardElement = document.createElement('table');
+        this.shipBoard.forEach((row, i) => {
+            const rowElement = document.createElement('tr');
+            row.forEach((cell, j) => {
+                const cellElement = document.createElement('td');
+                cellElement.setAttribute('data-row', i.toString());
+                cellElement.setAttribute('data-column', j.toString());
+                cellElement.classList.add('board-cell');
+                rowElement.appendChild(cellElement);
+            });
+            boardElement.appendChild(rowElement);
+        });
+        boardDiv.appendChild(boardElement); // Add the board to the DOM
+        this.updateDisplay(); // Update the display
+        this.addEventListeners(); // Add event listeners
+    }
+
+    hitCell(cell: { row: number, column: number, shipId: number }) {
+        const htmlcells = document.querySelectorAll<HTMLTableCellElement>('.board-cell');
+        const htmlcell = htmlcells[cell.row * 8 + cell.column];
+        htmlcell.classList.add('hit');
+    }
+
+    missCell(cell: { row: number, column: number, shipId: number }) {
+        const htmlcells = document.querySelectorAll<HTMLTableCellElement>('.board-cell');
+        const htmlcell = htmlcells[cell.row * 8 + cell.column];
+        htmlcell.classList.add('miss');
+    }
+
+    sinkShip(cell: { row: number, column: number, shipId: number }) {
+        const shipCells = this.getShipCells(cell.shipId);
+        // traditionally, render cells around ship as missed
+    }
+
+    gameOver() {
+        this.gameIsOver = true;
+        // render game over screen?
     }
 }
+
+

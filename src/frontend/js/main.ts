@@ -31,6 +31,7 @@ class GameClient {
                     if (playersReadyElement) {
                         playersReadyElement.textContent = `Players Ready: ${data.playersReady}`;
                     }
+
                     break;
                 // Handle other message types...
             }
@@ -98,6 +99,8 @@ class GameClient {
                 }
             };
         }
+
+        // prevent if gamestarts
     }
     
     leaveRoom() {
@@ -139,7 +142,6 @@ class GameClient {
             }
             playerListDiv.appendChild(playerDiv);
         }
-
     }
 
     confirmPlacement() {
@@ -153,6 +155,9 @@ class GameClient {
                 this.lockConfirmPlacementButton();
                 console.log('board locked')
 
+                this.usernames = data.usernames;
+                this.updateUsers();
+
                 const readyButton = document.querySelector("#readyButton") as HTMLElement; 
                 readyButton.textContent = "Waiting for other players"; // set readybutton text to Waiting for other players
                 
@@ -160,6 +165,7 @@ class GameClient {
                 readyButton.classList.remove("btnGreen"); // remove btnRed class from readybutton
 
                 if (data.start == true){
+                    this.displayGameScreen();
                     this.game.startGame();
                     console.log('all players ready, starting game')
                 }
@@ -186,6 +192,13 @@ class GameClient {
         titleScreen?.style.setProperty("display", "none");
         let lobbyScreen = document.querySelector(".lobbyScreen") as HTMLElement;
         lobbyScreen?.style.setProperty("display", "flex");
+    }
+
+    displayGameScreen() {
+        let lobbyScreen = document.querySelector(".lobbyScreen") as HTMLElement;
+        lobbyScreen?.style.setProperty("display", "none");
+        let gameScreen = document.querySelector(".gameScreen") as HTMLElement;
+        gameScreen?.style.setProperty("display", "flex");
     }
 }
 

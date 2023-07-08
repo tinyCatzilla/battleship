@@ -3,31 +3,28 @@ import { Board } from './board.js';
 export class Game {
     private gameId: string;
     private playerBoard: Board;
-    private boards: [Board];
+    private boards: Board[];
     private myTurn: boolean;
     private gameOver: boolean;
     private socket: WebSocket;
     private myPlayerNumber: number;
+    private totalPlayers: number;
 
     constructor(gameId: string, myPlayerNumber: number) {
         this.gameId = gameId;
         this.playerBoard = new Board();
-        this.boards = [this.playerBoard];
+        this.boards = [this.playerBoard]; //player 0 dummy board
         this.myTurn = false;
         this.gameOver = false;
         this.socket = new WebSocket(`ws://localhost:3050/${gameId}`);
         this.myPlayerNumber = myPlayerNumber;
+        this.totalPlayers = -1;
         
         this.socket.onmessage = (event) => {
             const { type, data } = JSON.parse(event.data);
             switch (type) {
-                case 'boardUpdate':
-                    this.boards[data.playerNumber].updateBoard(data.board);
-                    this.gameOver = data.gameOver;
-                    if (this.gameOver = true) {
-
-                    }
-                    this.myTurn = (data.turn == myPlayerNumber);
+                case 'gameStart':
+                    this.startGame();
                     break;
                 // Handle other messages
             }
@@ -48,6 +45,23 @@ export class Game {
     }
 
     startGame() {
+        // Tell the server that the game has started
+        this.socket.send(JSON.stringify({
+            type: 'startGame',
+            gameId: this.gameId
+        }));
+        this.socket.onmessage = (event) => {
+            const data = JSON.parse(event.data);
+            if (data.type === 'startGame') {
+                this.totalPlayers = data.totalPlayers;
+                this.myTurn = (data.turn == this.myPlayerNumber);
+                for (let i = 0; i < this.totalPlayers; i++) {
+                    var board = new Board();
+                    this.boards.push(board);
+                }
+            }
+        };
+        this.unrender();
         this.playerBoard.startGame();
     }
 
@@ -56,21 +70,38 @@ export class Game {
         alert("Wait for your turn");
         return;
         }
-        
-        const moveData = { type: "makeMove", data : {row: row, col: col }};
-        this.socket.send(JSON.stringify({type: 'makeMove', data: {moveData}}));
+        // on click, fire() is called?
     }
 
-    fire(row: number, column: number) {
+    fire(opponentNumber: number, cell: { row: number, column: number, shipId: number }) {
         // Tell the server that a player has fired at a certain cell
         this.socket.send(JSON.stringify({
             type: 'fire',
             data: {
-            gameId: this.gameId,
-            row,
-            column
+                gameId: this.gameId,
+                opponentNumber: opponentNumber,
+                cell: cell
             }
         }));
+        this.socket.onmessage = (event) => {
+            const data = JSON.parse(event.data);
+            if (data.type === 'fire') {
+                if (data.hit){
+                    this.boards[data.opponentNumber-1].hitCell(data.cell);
+                }
+                else {
+                    this.boards[data.opponentNumber-1].missCell(data.cell);
+                    this.myTurn = false;
+                }
+                if (data.sunk){
+                    this.boards[data.opponentNumber-1].sinkShip(data.cell);
+                }
+                if (data.gameOver){
+                this.boards[data.opponentNumber-1].gameOver();
+                }
+            }
+        };
+        // TODO: check if game is over for everyone, aka you are last one standing
     }
 
     leaveGame() {

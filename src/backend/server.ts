@@ -46,7 +46,8 @@ wss.on('connection', (ws: WS) => {
                         break;
                     case 'joinGame':
                         const joinResult = service.joinGame(data.gameId, data.username);
-                        ws.send(JSON.stringify({ type: 'joinGame', success: joinResult.success, playerNumber: joinResult.playerNumber, usernames: service.usernames.get(data.gameId) }));
+                        const usernames = service.usernames.get(data.gameId);
+                        ws.send(JSON.stringify({ type: 'joinGame', success: joinResult.success, playerNumber: joinResult.playerNumber, usernames: usernames }));
                         if (joinResult.success) {
                             addToGameClients(data.gameId, ws);
                             currentGameId = data.gameId;
@@ -59,16 +60,31 @@ wss.on('connection', (ws: WS) => {
                         ws.send(JSON.stringify({ type: 'leaveGame', success: leaveResult.success }));
                         break;
                     case 'confirmPlacement':
-                        const confirmResult = service.confirmPlacement(data.gameId, data.playerNumber, data.shipCells);
-                        console.log('confirmPlacement result:', confirmResult);
-                        ws.send(JSON.stringify({ type: 'confirmPlacement', start: confirmResult }));
+                        const confirmPlacement = service.confirmPlacement(data.gameId, data.playerNumber, data.shipCells);
+                        console.log('confirmPlacement result:', confirmPlacement);
+                        ws.send(JSON.stringify({ type: 'confirmPlacement', start: confirmPlacement.start, usernames: confirmPlacement.usernames }));
                         console.log('sent confirmPlacement result to client');
-                        const playersReady = service.getPlayersReady(data.gameId);
+                        const playersReady = service.getPlayersReady(data.gameId); // this just calls number of players ready, doesnt do anything rn
                         broadcast(data.gameId, { type: 'playersReadyUpdate', playersReady: playersReady });
                         break;
+                    case 'startGame':
+                        const startGame = service.startGame(data.gameId);
+                        const totalPlayers = service.getTotalPlayers(data.gameId);
+                        console.log('startGame result:', startGame);
+                        ws.send(JSON.stringify({ type: 'startGame', totalPlayers: totalPlayers, turn: startGame.turn}));
+                        console.log('sent startGame result to client');
                     case 'fire':
-                        // Handle firing logic
-                        // ws.send(game.returnstate())
+                        // Assuming data is { gameId, opponentNumber, cell }
+                        const fireResult = service.fire(data.gameId, data.opponentNumber, data.cell);
+                        console.log('fire result:', fireResult);
+                        if (fireResult.status === 'error') {
+                            // The fire function could not be executed successfully. Respond accordingly.
+                            ws.send(JSON.stringify({ type: 'error', message: fireResult.message }));
+                            console.log('sent error to client');
+                        } else {
+                            ws.send(JSON.stringify({ type: 'fire', hit: fireResult.hit, sunk: fireResult.sunk, gameOver: fireResult.gameOver }));
+                            console.log('sent fire result to client');
+                        }
                         break;
                 }
             

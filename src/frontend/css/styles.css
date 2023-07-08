@@ -144,13 +144,6 @@ table {
 
 #gameBoard {
     margin-bottom: 20px;
-    /* background-color: var(--board-bg); */
-    /*transform: translate(-50%, -50%);
-    webkit-transform: translate(-50%, -50%);
-    ms-transform: translate(-50%, -50%);
-    position: absolute;
-    top: 50%;
-    left: 50%; */
 }
 
 .board-cell {
@@ -158,7 +151,14 @@ table {
     height: 30px; */
     width: 3vw;
     height: 3vw;
+}
 
+.board-cell-small {
+    width: 1.5vw;
+    height: 1.5vw;
+}
+
+.board-cell, .board-cell-small {
     border: 1px solid rgba(0, 0, 0, 0.301);
     text-align: center;
     background-color: var(--board-bg);
@@ -177,6 +177,16 @@ table {
 .rotate-failed {
     background-color: rgba(255, 165, 0, 0.5); /* translucent orange */
     border: 2px solid red;
+}
+
+.hit {
+    background-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 50 50"><line x1="10" y1="10" x2="40" y2="40" stroke="red" stroke-width="4"/><line x1="40" y1="10" x2="10" y2="40" stroke="red" stroke-width="4"/></svg>');
+    background-size: cover;
+}
+
+.miss {
+    background-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 50 50"><circle cx="25" cy="25" r="5" fill="blue" /></svg>');
+    background-size: cover;
 }
 
 .lobbyScreen {
@@ -200,9 +210,6 @@ table {
     left: 0;
 }
 
-.gameScreen {
-    display: none;
-}
 
 
 .lobbyMain {
@@ -249,4 +256,15 @@ table {
 
 .rightSide {
     /* background-color: green; */
+}
+
+
+.gameScreen {
+    display: none;
+}
+.leftBoards {
+    background:red;
+}
+.rightBoards {
+    background:blue;
 }

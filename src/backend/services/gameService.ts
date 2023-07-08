@@ -70,26 +70,59 @@ export class GameService {
         const game = this.games.get(gameId);
         if (game) {
             game.playersReady += 1;
-            this.usernames.get(gameId)![playerNumber][1] = 'ready';
+            var gameUsernames = this.usernames.get(gameId);
+            gameUsernames![playerNumber - 1][1] = 'ready';
             game.placeShips(playerNumber, shipCells);
             if (game.playersReady === game.totalPlayers && game.totalPlayers > 1) {
                 game.playerTurn = 1;
-                return true;
+                return {start: true, usernames: gameUsernames};
             }
+            return {start: false, usernames: gameUsernames};
         }
-        return false;
+        return { status: 'error', message: 'Game not found' };
     }
 
-    // getTotalPlayers(gameId: string): number {
-    //     const game = this.games.get(gameId);
-    //     return game ? game.getTotalPlayers : 0;
-    // }
+    getTotalPlayers(gameId: string): number {
+        const game = this.games.get(gameId);
+        return game ? game.getTotalPlayers : 0;
+    }
 
     getPlayersReady(gameId: string): number {
         const game = this.games.get(gameId);
         return game ? game.getPlayersReady : 0;
     }
 
+    startGame(gameId: string) {
+        const game = this.games.get(gameId);
+        if (!game) { return { status: 'error', message: 'Game not found' };  }
+        var turn = Math.floor(Math.random() * game.totalPlayers+1);
+        return {turn: turn};
+    }
 
+    fire(gameId: string, opponentNumber: number, cell: { row: number, column: number, shipId: number }) {
+        const game = this.games.get(gameId);
+        if (!game) { return { status: 'error', message: 'Game not found' };  }
+    
+        var opponentBoard = game.boards[opponentNumber]
+        if (opponentBoard[cell.row][cell.column].isHit) {
+            console.log('FRONTEND/BACKEND DESYNC: cell already hit');
+            return {hit: false, sunk: false};
+        }
+    
+        if (opponentBoard[cell.row][cell.column].hasShip) {
+            opponentBoard[cell.row][cell.column].isHit = true;
+            game.remaining[opponentNumber][cell.shipId]--;
+            const isSunk = game.remaining[opponentNumber][cell.shipId] === 0;
+            const isGameOver = game.isGameOver(opponentNumber);
+    
+            game.boards[opponentNumber] = opponentBoard;
+            return {hit: true, sunk: isSunk, gameOver: isGameOver};
+        }
+        else {
+            opponentBoard[cell.row][cell.column].isHit = true;
+            game.boards[opponentNumber] = opponentBoard;
+            return {hit: false, sunk: false, gameOver: false};
+        }
+    }
     // Add other methods to manage the game state (e.g., make a move, check for win/lose, etc.)
 }

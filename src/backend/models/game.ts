@@ -30,7 +30,7 @@ export class Game {
     gameId: string;
     totalPlayers: number;
     boards: Cell[][][];
-    remaining: number[];
+    remaining: number[][];
     playersReady: number;
     playerTurn: number;
 
@@ -64,7 +64,7 @@ export class Game {
         });
     
         // Convert the intermediate object into an array
-        this.remaining = Object.keys(shipIdCounts).map((key) => shipIdCounts[parseInt(key)]);
+        this.remaining[playerNumber] = Object.keys(shipIdCounts).map((key) => shipIdCounts[parseInt(key)]);
     }
 
     get getTotalPlayers() {
@@ -74,6 +74,12 @@ export class Game {
     get getPlayersReady() {
         return this.playersReady;
     }
+
+    isGameOver(playerNumber: number) {
+        // The game is over if all ships are sunk (i.e., their remaining size is 0)
+        return this.remaining[playerNumber].every(size => size === 0);
+    }
+    
 }
 
     // playerMakesMove(playerNumber: number, row: number, col: number) {

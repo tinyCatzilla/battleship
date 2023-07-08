@@ -38,29 +38,27 @@
                 <div class="lobbyMain">
                     <div class="leftSide">
                         <div class="lobbyCode">Lobby: <span id="lobbyCode" onclick="copyLobbyCode()">TABCAT</span></div>
-                        <div class="playerList">
-                            <div class="player">Player 1</div>
-                            <div class="player">Player 2</div>
-                            <div class="player">Player 3</div>
-                        </div>
+                        <div class="playerList"></div>
                     </div>
-
                     <div class="centreSide">
                         <div id="gameBoard"></div>
                         <button id="readyButton" class="menuButton btnGreen">Ready</button>
                     </div>
-
                     <div class="rightSide">
                     </div>
                 </div>
             </div>
-
-            <!-- <div class="gameScreen">
-                    
-            </div> -->
-            <!-- <div id="totalPlayers">Total Players: 0</div>
-            <div id="playersReady">Players Ready: 0</div>
-            <div id="playerTurn">Player Turn: 0</div> -->
+            <div class="gameScreen">
+                <button id="leaveRoomButton" class="menuButton btnYellow">Leave Room</button>
+                <div class="leftBoards">
+                    <div class="playerBoard"></div>
+                    <div class="attackerBoard"></div>
+                </div>
+                <div class="rightBoards">
+                    <div class="boardGrid"></div>
+                    <div class="activeBoard"></div>
+                </div>
+            </div>
         </div>
 
         <script>var exports = {};</script>
