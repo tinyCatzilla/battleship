@@ -1,14 +1,14 @@
 export class Board {
-    private shipCells: { row: number, column: number, shipId: number }[] = [];
-    private ships: { id: number, size: number, orientation: 'horizontal' | 'vertical' }[] = [];
-    private preemptiveBoard: boolean[][];
-    private locked: boolean = false;
+    private shipCells: { row: number, column: number, shipId: number }[] = []; // Stores the cells that have ships
+    private ships: { id: number, size: number, orientation: 'horizontal' | 'vertical' }[] = []; // Stores ship metadata
+    private shipBoard: boolean[][]; // Stores the board as a 2D array of booleans, true if the cell has a ship
+    private locked: boolean = false; // Whether the board is locked for editing
     private dragStart_cell: { row: number, column: number } | undefined = undefined;
-    private dragStart_diff: number = 0;
+    private dragStart_diff: number = 0; // Difference between the drag start cell and the first cell of the ship
     
     constructor() {
         // Initialize an empty board
-        this.preemptiveBoard = Array.from({ length: 8 }, () => Array(8).fill(false));
+        this.shipBoard = Array.from({ length: 8 }, () => Array(8).fill(false));
     }
     
     get getShips() {
@@ -21,7 +21,7 @@ export class Board {
         
         // Render the board as an HTML table
         const boardElement = document.createElement('table');
-        this.preemptiveBoard.forEach((row, i) => {
+        this.shipBoard.forEach((row, i) => {
             const rowElement = document.createElement('tr');
             row.forEach((cell, j) => {
                 const cellElement = document.createElement('td');
@@ -49,7 +49,35 @@ export class Board {
         }
     }
 
-    placeShips(shipConfig: { size: number, count: number }[]) {
+    private canPlaceShip(row: number, column: number, size: number, orientation: string, movingShipId?: number): boolean {
+        // Checks if the given input is a valid ship placement
+        // PRECONDITION: row, column are the FIRST cell of the ship
+        // TODO: Take in array of cells, rather than first cell
+        for (let i = 0; i < size; i++) {
+            let cellRow = row;
+            let cellColumn = column;
+    
+            if (orientation === 'horizontal') {
+                cellColumn += i;
+            } else {
+                cellRow += i;
+            }
+    
+            if (cellRow < 0 || cellRow >= 8 || cellColumn < 0 || cellColumn >= 8) {
+                return false;
+            }
+    
+            if (this.shipBoard[cellRow][cellColumn] === true) {
+                const shipCell = this.shipCells.find(cell => cell.row === cellRow && cell.column === cellColumn);
+                if (!shipCell || shipCell.shipId !== movingShipId) {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+
+    placeInitialShips(shipConfig: { size: number, count: number }[]) {
         let currentShipId = 0;
         for (const { size, count } of shipConfig) {
             let remaining = count;
@@ -69,7 +97,7 @@ export class Board {
                             cellRow += i;
                         }
 
-                        this.preemptiveBoard[cellRow][cellColumn] = true;
+                        this.shipBoard[cellRow][cellColumn] = true;
                         this.shipCells.push({ row: cellRow, column: cellColumn, shipId: currentShipId });
                     }
                     this.ships.push({ id: currentShipId, size, orientation });
@@ -79,31 +107,6 @@ export class Board {
             }
         }
         this.updateDisplay();
-    }
-
-    private canPlaceShip(row: number, column: number, size: number, orientation: string, movingShipId?: number): boolean {
-        for (let i = 0; i < size; i++) {
-            let cellRow = row;
-            let cellColumn = column;
-    
-            if (orientation === 'horizontal') {
-                cellColumn += i;
-            } else {
-                cellRow += i;
-            }
-    
-            if (cellRow < 0 || cellRow >= 8 || cellColumn < 0 || cellColumn >= 8) {
-                return false;
-            }
-    
-            if (this.preemptiveBoard[cellRow][cellColumn] === true) {
-                const shipCell = this.shipCells.find(cell => cell.row === cellRow && cell.column === cellColumn);
-                if (!shipCell || shipCell.shipId !== movingShipId) {
-                    return false;
-                }
-            }
-        }
-        return true;
     }
     
     private updateDisplay() {
@@ -116,11 +119,40 @@ export class Board {
             cell.classList.remove('ship');
             cell.setAttribute('draggable', 'false');
 
-            if (this.preemptiveBoard[row][column] === true) {
+            if (this.shipBoard[row][column] === true) {
                 cell.classList.add('ship');
                 cell.setAttribute('draggable', 'true');
             }
         });
+    }
+
+    private updateShipCells(ship: { id: number, size: number, orientation: 'horizontal' | 'vertical' }) { 
+        const shipCells = this.shipCells.filter(cell => cell.shipId === ship.id);
+        if (shipCells.length > 0) {
+            // Clears the old cells from shipBoard
+            for (let cell of shipCells) {
+                this.shipBoard[cell.row][cell.column] = false;
+            }
+
+
+            const firstCell = shipCells[0];
+            for (let i = 0; i < ship.size; i++) {
+                let cellRow = firstCell.row;
+                let cellColumn = firstCell.column;
+
+                if (ship.orientation === 'horizontal') {
+                    cellColumn += i;
+                } else {
+                    cellRow += i;
+                }
+
+                if (i < shipCells.length) {
+                    shipCells[i].row = cellRow;
+                    shipCells[i].column = cellColumn;
+                    this.shipBoard[cellRow][cellColumn] = true;
+                }
+            }
+        }
     }
 
     private addEventListeners() {
@@ -130,12 +162,10 @@ export class Board {
             cell.addEventListener('dragover', this.dragOver);
             cell.addEventListener('dragleave', this.dragLeave);
             cell.addEventListener('drop', this.drop);
-            cell.addEventListener('dragend', this.dragEnd);
             cell.addEventListener('click', this.rotate);
         });
     }
     
-
     private dragStart = (e: DragEvent) => {
         if (this.locked) return;
 
@@ -145,26 +175,23 @@ export class Board {
     
         const shipCell = this.shipCells.find(cell => cell.row === row && cell.column === column);
         if (!shipCell) { return; }
-        this.dragStart_cell = shipCell
+        this.dragStart_cell = shipCell // unused
 
         if (shipCell) {
             e.dataTransfer!.setData('text/plain', shipCell.shipId.toString());
             const data = e.dataTransfer?.getData('text/plain');
-            console.log(data);
             const shipId = data ? +data : -1;
-            if (shipId == -1) { return; }
-            console.log(this.dragStart_diff);
-            console.log('dragStart');
-    
-    
+            if (shipId == -1) { 
+                console.log("FATAL ERROR: shipCells and shipIds are out of sync in dragStart()")
+                return; }
+            
+            // Calculate the difference between the drag start cell and the first cell of the ship
             const shipCells = this.shipCells.filter(cell => cell.shipId === shipId);
             this.dragStart_diff = shipCell.row + shipCell.column - shipCells[0].row - shipCells[0].column;
-            console.log(this.dragStart_diff);
-            console.log('dragStart');
     
             // Hide the ship at its old position
             this.shipCells.filter(cell => cell.shipId === shipCell.shipId)
-                .forEach(cell => this.preemptiveBoard[cell.row][cell.column] = false);
+                .forEach(cell => this.shipBoard[cell.row][cell.column] = false);
             this.updateDisplay();
     
             // Hide the drag image
@@ -182,9 +209,18 @@ export class Board {
         }
     };
 
+    private dragOver_cell(row: number, column: number, ship: { id: number, size: number, orientation: 'horizontal' | 'vertical' }) {
+        if (ship.orientation === 'horizontal') {
+            var column = column - this.dragStart_diff;
+        } else {
+            var row = row - this.dragStart_diff;
+        }
+        return {row: row, column: column};
+    }
+
     private dragOver = (e: DragEvent) => {
         e.preventDefault();
-        
+        // Remove legal move from past drag over
         const cells = document.querySelectorAll<HTMLTableCellElement>('.board-cell');
         console.log(cells);
         cells.forEach(cell => cell.classList.remove('legal-move'));
@@ -194,18 +230,19 @@ export class Board {
         var cellColumn = +target.getAttribute('data-column')!;
         const data = e.dataTransfer?.getData('text/plain');
         const shipId = data ? +data : -1;
-        if (shipId == -1) { return; }
+        if (shipId == -1) { 
+            console.log("FATAL ERROR: shipCells and shipIds are out of sync in dragOver()")
+            return; }
         const ship = this.ships.find(ship => ship.id === shipId);
-        if (!ship) { return; }
-        if (ship.orientation === 'horizontal') {
-            var cellColumn = cellColumn - this.dragStart_diff;
-        } else {
-            var cellRow = cellRow - this.dragStart_diff;
-        }
-        if (this.canPlaceShip(cellRow, cellColumn, ship.size, ship.orientation, shipId)) {
+        if (!ship) { 
+            console.log("ERROR: shipId without ship in dragOver()")
+            return; }
+        var firstCell = this.dragOver_cell(cellRow, cellColumn, ship);
+
+        if (this.canPlaceShip(firstCell.row, firstCell.column, ship.size, ship.orientation, shipId)) {
             for (let i = 0; i < ship.size; i++) {
-                var newRow = cellRow;
-                var newColumn = cellColumn;
+                var newRow = firstCell.row;
+                var newColumn = firstCell.column;
                 if (ship.orientation === 'horizontal') {
                     newColumn += i;
                 } else {
@@ -213,7 +250,7 @@ export class Board {
                 }
                 if (newRow >= 0 && newRow < 8 && newColumn >= 0 && newColumn < 8) {
                     const cell = cells[newRow * 8 + newColumn];
-                    cell.classList.add('legal-move');
+                    cell.classList.add('legal-move'); // add legal moves to new cells
                 }
             }
         }
@@ -226,41 +263,13 @@ export class Board {
         target.classList.remove('legal-move');
     };
 
-    private dragEnd = (e: DragEvent) => {
+    private drop = (e: DragEvent) => {
+        // remove green drag image
         const cells = document.querySelectorAll<HTMLTableCellElement>('.board-cell');
         cells.forEach((cell) => {
             cell.classList.remove('legal-move');
         });
-        
-        const data = e.dataTransfer?.getData('text/plain');
-        const shipId = data ? +data : -1;
-        const ship = this.ships.find(ship => ship.id === shipId);
 
-        if (!ship) return;
-
-        // Check if the ship was dropped in a legal position
-        const target = e.target as HTMLElement;
-        var newRow = +target.getAttribute('data-row')!;
-        var newColumn = +target.getAttribute('data-column')!;
-        const shipCells = this.shipCells.filter(cell => cell.shipId === shipId)
-        var cellRow = newRow;
-        var cellColumn = newColumn;
-        if (ship.orientation === 'horizontal') {
-            var cellColumn = newColumn - this.dragStart_diff;
-        } else {
-            var cellRow = newRow - this.dragStart_diff;
-        }
-        if (this.canPlaceShip(cellRow, cellColumn, ship.size, ship.orientation, shipId)) {
-            if (shipCells.length > 0) {
-                shipCells.forEach(cell => {
-                    this.preemptiveBoard[cell.row][cell.column] = true;
-                });
-                this.updateDisplay();
-            }
-        }
-    };
-
-    private drop = (e: DragEvent) => {
         e.preventDefault();
 
         const target = e.target as HTMLElement;
@@ -355,46 +364,14 @@ export class Board {
             }
         }
     };
-    
-    
-    private updateShipCells(ship: { id: number, size: number, orientation: 'horizontal' | 'vertical' }) { 
-        const shipCells = this.shipCells.filter(cell => cell.shipId === ship.id);
-        if (shipCells.length > 0) {
-            // First, clear the old cells from preemptiveBoard
-            for (let cell of shipCells) {
-                this.preemptiveBoard[cell.row][cell.column] = false;
-            }
-
-            const firstCell = shipCells[0];
-            for (let i = 0; i < ship.size; i++) {
-                let cellRow = firstCell.row;
-                let cellColumn = firstCell.column;
-
-                if (ship.orientation === 'horizontal') {
-                    cellColumn += i;
-                } else {
-                    cellRow += i;
-                }
-
-                if (i < shipCells.length) {
-                    shipCells[i].row = cellRow;
-                    shipCells[i].column = cellColumn;
-                    this.preemptiveBoard[cellRow][cellColumn] = true;
-                }
-            }
-        }
-    }
 
 
     lockBoard() {
+        // locks when player ready
         this.locked = true;
     }
 
    updateBoard(board: Board) {
-        // Here you can update your board using the data received through socket
-        // or by calculating the new state based on the current state of the game.
-        // This will be dependent on the game logic
+        // will update from socket
     }
-
-    // ALLOWED TO DRAGO UT OF THIN AIR
 }

@@ -38,33 +38,33 @@ wss.on('connection', (ws: WS) => {
             async function handleGameAction(type: string, data: any, ws: WS) {
                 switch (type) {
                     case 'createGame':
-                        await service.createGame(data.gameId, data.username);
-                        await addToGameClients(data.gameId, ws);
+                        service.createGame(data.gameId, data.username);
+                        addToGameClients(data.gameId, ws);
                         console.log(service.usernames.get(data.gameId));
-                        await ws.send(JSON.stringify({ type: 'createGame', usernames: service.usernames.get(data.gameId) }));
+                        ws.send(JSON.stringify({ type: 'createGame', usernames: service.usernames.get(data.gameId) }));
                         console.log('Game created:', data.gameId);
                         break;
                     case 'joinGame':
-                        const joinResult = await service.joinGame(data.gameId, data.username);
-                        await ws.send(JSON.stringify({ type: 'joinGame', success: joinResult.success, playerNumber: joinResult.playerNumber, usernames: service.usernames.get(data.gameId) }));
+                        const joinResult = service.joinGame(data.gameId, data.username);
+                        ws.send(JSON.stringify({ type: 'joinGame', success: joinResult.success, playerNumber: joinResult.playerNumber, usernames: service.usernames.get(data.gameId) }));
                         if (joinResult.success) {
-                            await addToGameClients(data.gameId, ws);
+                            addToGameClients(data.gameId, ws);
                             currentGameId = data.gameId;
                             console.log('Joined game:', data.gameId);
                         }
                         break;
                     case 'leaveGame':
-                        const leaveResult = await service.leaveGame(data.gameId, data.playerNumber);
+                        const leaveResult = service.leaveGame(data.gameId, data.playerNumber);
                         // Remove the client from the gameClients map
-                        await ws.send(JSON.stringify({ type: 'leaveGame', success: leaveResult.success }));
+                        ws.send(JSON.stringify({ type: 'leaveGame', success: leaveResult.success }));
                         break;
                     case 'confirmPlacement':
-                        const confirmResult = await service.confirmPlacement(data.gameId, data.playerNumber, data.shipCells);
+                        const confirmResult = service.confirmPlacement(data.gameId, data.playerNumber, data.shipCells);
                         console.log('confirmPlacement result:', confirmResult);
-                        await ws.send(JSON.stringify({ type: 'confirmPlacement', start: confirmResult }));
+                        ws.send(JSON.stringify({ type: 'confirmPlacement', start: confirmResult }));
                         console.log('sent confirmPlacement result to client');
-                        const playersReady = await service.getPlayersReady(data.gameId);
-                        await broadcast(data.gameId, { type: 'playersReadyUpdate', playersReady: playersReady });
+                        const playersReady = service.getPlayersReady(data.gameId);
+                        broadcast(data.gameId, { type: 'playersReadyUpdate', playersReady: playersReady });
                         break;
                     case 'fire':
                         // Handle firing logic

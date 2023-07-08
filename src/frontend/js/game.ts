@@ -36,7 +36,7 @@ export class Game {
 
     render() {
         this.playerBoard.render();
-        this.playerBoard.placeShips([{ size: 1, count: 3 }, { size: 2, count: 2 }, { size: 3, count: 1 }]);
+        this.playerBoard.placeInitialShips([{ size: 1, count: 3 }, { size: 2, count: 2 }, { size: 3, count: 1 }]);
     }
 
     unrender() {
