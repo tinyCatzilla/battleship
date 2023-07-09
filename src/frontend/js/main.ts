@@ -9,6 +9,7 @@ class GameClient {
     username: string;
     usernames: string[];
     private playerBoard: Board;
+    turn: number;
 
     constructor() {
         this.socket = new WebSocket("ws://localhost:3050");
@@ -18,6 +19,7 @@ class GameClient {
         this.username = "";
         this.usernames = [];
         this.playerBoard = new Board();
+        this.turn = -1;
 
         this.socket.onmessage = (event) => {
             const data = JSON.parse(event.data);
@@ -59,8 +61,17 @@ class GameClient {
                 this.game.totalPlayers = data.totalPlayers;
                 this.game.playersLeft = data.totalPlayers;
                 this.game.turn = data.turn;
+                this.turn = data.turn;
+                var playerTurn = document.querySelector("#playerTurn") as HTMLElement;
+                playerTurn.textContent = `${this.usernames[this.turn-1][0]}`;
                 this.game.startGame();
                 console.log('all players ready, starting game');
+            }
+            else if (data.type === 'nextturn'){
+                console.log('nextturn received');
+                this.turn = data.opponentNumber;
+                var playerTurn = document.querySelector("#playerTurn") as HTMLElement;
+                playerTurn.textContent = `${this.usernames[this.turn-1][0]}`;
             }
         };
     }

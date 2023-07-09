@@ -412,7 +412,7 @@ export class Board {
         boardDiv.appendChild(boardElement); // Add the board to the DOM
     }
 
-    rendersmallplayer() {
+    rendersmallplayer(playerNumber: number) {
         const boardDiv = document.querySelector(".playerBoard");
         if (!boardDiv) return;
         // Render the board as an HTML table
@@ -423,6 +423,13 @@ export class Board {
                 const cellElement = document.createElement('td');
                 cellElement.setAttribute('data-row', i.toString());
                 cellElement.setAttribute('data-column', j.toString());
+                const cellId = `${i}-${j}`;
+                if (this.hitCells.has(cellId)) {
+                    cellElement.classList.add('hit');
+                } else if (this.missedCells.has(cellId)) {
+                    cellElement.classList.add('miss');
+                }
+                cellElement.setAttribute('data-playerNumber', playerNumber.toString());
                 cellElement.classList.add('board-cell-player');
                 rowElement.appendChild(cellElement);
             });
@@ -462,19 +469,25 @@ export class Board {
         boardDiv.appendChild(boardElement); // Add the board to the DOM
     }
 
-    updateCellDisplay(row: number, column: number, isHit: boolean, opponentNumber: number) {
+    updateCellDisplay(row: number, column: number, isHit: boolean, playerNumber: number) {
         const cellClass = isHit ? 'hit' : 'miss';
     
         // For the active board
-        const activeCell = document.querySelector(`.activeBoard [data-row="${row}"][data-column="${column}"][data-playerNumber="${opponentNumber}"]`);
+        const activeCell = document.querySelector(`.activeBoard [data-row="${row}"][data-column="${column}"][data-playerNumber="${playerNumber}"]`);
         if (activeCell) {
-          activeCell.classList.add(cellClass);
+            activeCell.classList.add(cellClass);
         }
     
         // For the small grid boards
-        const smallCell = document.querySelector(`.boardGrid [data-row="${row}"][data-column="${column}"][data-playerNumber="${opponentNumber}"]`);
+        const smallCell = document.querySelector(`.boardGrid [data-row="${row}"][data-column="${column}"][data-playerNumber="${playerNumber}"]`);
         if (smallCell) {
-          smallCell.classList.add(cellClass);
+            smallCell.classList.add(cellClass);
+        }
+
+        // For the player board
+        const playerCell = document.querySelector(`.playerBoard [data-row="${row}"][data-column="${column}"][data-playerNumber="${playerNumber}"]`);
+        if (playerCell) {
+            playerCell.classList.add(cellClass);
         }
       }
     

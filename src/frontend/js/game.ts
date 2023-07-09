@@ -49,7 +49,7 @@ export class Game {
                 board.rendersmall(i);
             }
             else {
-                board.rendersmallplayer();
+                board.rendersmallplayer(i);
             }
         }
         this.socket.send(JSON.stringify({type: 'initGame', data:{gameId: this.gameId}}));
@@ -126,12 +126,46 @@ export class Game {
             const cellId = `${data.row}-${data.column}`;
             if (data.hit) {
                 opponentBoard.hitCells.add(cellId);
+                if (data.sunk) {
+                    // TODO
+                    console.log(`A ship was sunk on player ${data.opponentNumber}'s board!`);
+                    if (data.gameOver) {
+                        console.log(`Player ${data.opponentNumber} has no ships left!`);
+                        const smallBoard = document.querySelector(`#small-board-${data.opponentNumber}`);
+                        if(smallBoard) {
+                            const clone = smallBoard.cloneNode(true) as HTMLElement;
+                            clone.classList.add("defeated-board");
+                            smallBoard.parentNode?.replaceChild(clone, smallBoard);
+                        }
+                        
+                        this.playersLeft -= 1;
+                        if (this.playersLeft === 1) {
+                            console.log(`Player ${this.myPlayerNumber} is the last one standing!`);
+                            this.stopGame();
+                        }
+                    }
+                }
             } else {
                 opponentBoard.missedCells.add(cellId);
                 this.turn = data.opponentNumber;
             }
             opponentBoard.updateCellDisplay(data.row, data.column, data.hit, data.opponentNumber);
         }
+    }
+
+    stopGame() {
+        console.log("Game has been stopped.");
+    
+        const winnerAlert = document.createElement('div');
+        winnerAlert.classList.add('winner-alert');
+        winnerAlert.textContent = `Congratulations! Player ${this.myPlayerNumber} has won!`;
+    
+        const returnButton = document.createElement('button');
+        returnButton.textContent = 'Return to lobby';
+        returnButton.classList.add('return-button');
+    
+        winnerAlert.appendChild(returnButton);
+        document.body.appendChild(winnerAlert);
     }
 
     leaveGame() {
