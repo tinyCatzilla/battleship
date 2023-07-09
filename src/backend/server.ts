@@ -25,7 +25,7 @@ const server = http.createServer(app);
 const wss = new WebSocketServer({ server });
 var service = new GameService;
 const gameClients = new Map<string, WS[]>();
-const games = new Map<string, any>();
+const games = new Map<string, WS[]>();
 
 wss.on('connection', (ws: WS) => {
     let currentGameId: string | null = null;
@@ -77,6 +77,9 @@ wss.on('connection', (ws: WS) => {
                         }
                         console.log('confirmPlacement', data.gameId);
                         break;
+                    case 'initGame':
+                        addToGame(data.gameId, ws);
+                        break;
                     case 'fire':
                         console.log('fire data:', data);
                         // Assuming data is { gameId, opponentNumber, cell }
@@ -87,14 +90,14 @@ wss.on('connection', (ws: WS) => {
                             ws.send(JSON.stringify({ type: 'error', message: fireResult.message }));
                             console.log('sent error to client');
                         } else {
-                            ws.send(JSON.stringify({ type: 'fire',
+                           broadcastToGame(data.gameId,{ type: 'fire',
                             opponentNumber: data.opponentNumber,
                             row: data.row,
                             column: data.column,
                             hit: fireResult.hit,
                             sunk: fireResult.sunk,
-                            gameOver: fireResult.gameOver }));
-                            console.log('sent fire result to client');
+                            gameOver: fireResult.gameOver });
+                            console.log('fire broadcasted to game:', data.gameId);
                         }
                         break;
                 }
@@ -132,6 +135,30 @@ wss.on('connection', (ws: WS) => {
             console.log('Client added to game:', gameId);
         }
         console.log('Number of clients in game:', gameId, clients.length);
+    }
+
+    function broadcastToGame(gameId: string, message: any) {
+        const clients = games.get(gameId) || [];
+        console.log('Broadcasting to game:', gameId, 'Number of clients:', clients.length);
+        clients.forEach((client: WS) => {
+            if (client.readyState === WS.OPEN) {
+                client.send(JSON.stringify(message));
+            }
+        });
+    }
+
+    function addToGame(gameId: string, client: WS) {
+        let game = games.get(gameId);
+        if (!game) {
+            game = [client];
+            games.set(gameId, game);
+            console.log('First client initialized', gameId);
+        }
+        else {
+            game.push(client);
+            console.log('Client added to game:', gameId);
+        }
+        console.log('Number of clients in game:', gameId, game.length);
     }
 });
 

@@ -25,6 +25,8 @@ export class Game {
             const data = JSON.parse(event.data);
             switch (data.type) {
                 case 'fire':
+                    console.log(data);
+                    console.log('fire received');
                     this.handleFireResponse(data);
                     break;
             }
@@ -50,6 +52,7 @@ export class Game {
                 board.rendersmallplayer();
             }
         }
+        this.socket.send(JSON.stringify({type: 'initGame', data:{gameId: this.gameId}}));
         this.smallEventListeners();
         this.showGrid();
     }
@@ -99,6 +102,9 @@ export class Game {
     }
     
     fire = (e: MouseEvent) => {
+        if (this.turn != this.myPlayerNumber) {
+            return;
+        }
         const target = e.target as HTMLElement;
         const row = +target.getAttribute('data-row')!;
         const column = +target.getAttribute('data-column')!;
@@ -122,6 +128,7 @@ export class Game {
                 opponentBoard.hitCells.add(cellId);
             } else {
                 opponentBoard.missedCells.add(cellId);
+                this.turn = data.opponentNumber;
             }
             opponentBoard.updateCellDisplay(data.row, data.column, data.hit, data.opponentNumber);
         }
