@@ -25,19 +25,7 @@ export class Game {
             const data = JSON.parse(event.data);
             switch (data.type) {
                 case 'fire':
-                    if (data.hit){
-                        this.boards.get(data.opponentNumber)?.hitCell(data.cell);
-                    }
-                    else {
-                        this.boards.get(data.opponentNumber)?.missCell(data.cell);
-                        // this.myTurn = false;
-                    }
-                    if (data.sunk){
-                        this.boards.get(data.opponentNumber)?.sinkShip(data.cell);
-                    }
-                    if (data.gameOver){
-                        this.boards.get(data.opponentNumber)?.gameOver();
-                    }
+                    this.handleFireResponse(data);
                     break;
             }
         };
@@ -71,6 +59,7 @@ export class Game {
         cells.forEach((cell) => {
             cell.addEventListener('click', this.onSmallBoardClick);
         });
+
         const backToGrid = document.querySelector("#backToGrid") as HTMLElement; 
         backToGrid.addEventListener("click", () => this.showGrid());
     }
@@ -90,7 +79,12 @@ export class Game {
     
         // Render the selected board on the active board
         const board = this.boards.get(this.selectedBoardId);
-        if (board) board.renderactive();
+        if (board) board.renderactive(this.selectedBoardId);
+
+        const activeCells = document.querySelectorAll<HTMLTableCellElement>('.board-cell');
+        activeCells.forEach((cell) => {
+            cell.addEventListener('click', this.fire);
+        });
     }
     
     // should be called when back button is clicked
@@ -108,7 +102,7 @@ export class Game {
         const target = e.target as HTMLElement;
         const row = +target.getAttribute('data-row')!;
         const column = +target.getAttribute('data-column')!;
-        const opponentNumber = +target.getAttribute('data-opponentNumber')!; // need way to get opponent number
+        const opponentNumber = +target.getAttribute('data-playerNumber')!;
         this.socket.send(JSON.stringify({
             type: 'fire',
             data: {
@@ -118,7 +112,19 @@ export class Game {
                 column: column,
             }
         }));
-        // TODO: check if game is over for everyone, aka you are last one standing
+    }
+
+    handleFireResponse(data: any) {
+        const opponentBoard = this.boards.get(data.opponentNumber);
+        if (opponentBoard) {
+            const cellId = `${data.row}-${data.column}`;
+            if (data.hit) {
+                opponentBoard.hitCells.add(cellId);
+            } else {
+                opponentBoard.missedCells.add(cellId);
+            }
+            opponentBoard.updateCellDisplay(data.row, data.column, data.hit, data.opponentNumber);
+        }
     }
 
     leaveGame() {

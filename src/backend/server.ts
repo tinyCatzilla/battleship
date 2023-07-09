@@ -80,14 +80,20 @@ wss.on('connection', (ws: WS) => {
                     case 'fire':
                         console.log('fire data:', data);
                         // Assuming data is { gameId, opponentNumber, cell }
-                        const fireResult = service.fire(data.gameId, data.opponentNumber, data.column, data.row);
+                        const fireResult = service.fire(data.gameId, data.opponentNumber, data.row, data.column);
                         console.log('fire result:', fireResult);
                         if (fireResult.status === 'error') {
                             // The fire function could not be executed successfully. Respond accordingly.
                             ws.send(JSON.stringify({ type: 'error', message: fireResult.message }));
                             console.log('sent error to client');
                         } else {
-                            ws.send(JSON.stringify({ type: 'fire', hit: fireResult.hit, sunk: fireResult.sunk, gameOver: fireResult.gameOver }));
+                            ws.send(JSON.stringify({ type: 'fire',
+                            opponentNumber: data.opponentNumber,
+                            row: data.row,
+                            column: data.column,
+                            hit: fireResult.hit,
+                            sunk: fireResult.sunk,
+                            gameOver: fireResult.gameOver }));
                             console.log('sent fire result to client');
                         }
                         break;

@@ -273,3 +273,10 @@ table {
 .rightBoards {
     background:blue;
 }
+
+.boardGrid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px; /* adjust this for space between grid items */
+    padding: 10px; /* adjust this for space around the whole grid */
+}

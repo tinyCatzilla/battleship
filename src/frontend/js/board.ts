@@ -1,6 +1,5 @@
 export type Cell = {
     hasShip: boolean;
-    isHit: boolean;
 };
 
 export class Board {
@@ -10,6 +9,9 @@ export class Board {
     private locked: boolean = false; // Whether the board is locked for editing
     private dragStart_diff: number = 0; // Difference between the drag start cell and the first cell of the ship
     private gameIsOver: boolean = false; // Whether this player's game is over
+    hitCells = new Set<string>();
+    missedCells = new Set<string>();
+
     
     constructor() {
         // Initialize an empty board
@@ -393,6 +395,13 @@ export class Board {
                 const cellElement = document.createElement('td');
                 cellElement.setAttribute('data-row', i.toString());
                 cellElement.setAttribute('data-column', j.toString());
+                const cellId = `${i}-${j}`;
+                if (this.hitCells.has(cellId)) {
+                    cellElement.classList.add('hit');
+                } else if (this.missedCells.has(cellId)) {
+                    cellElement.classList.add('miss');
+                }
+                cellElement.setAttribute('data-playerNumber', playerNumber.toString());
                 cellElement.classList.add('board-cell-small');
                 rowElement.appendChild(cellElement);
             });
@@ -423,7 +432,7 @@ export class Board {
         this.updateDisplay(); // Update the display
     }
 
-    renderactive() {
+    renderactive(playerNumber: number) {
         const boardDiv = document.querySelector(".activeBoard");
         if (!boardDiv) return;
         // Remove all previous children
@@ -438,6 +447,13 @@ export class Board {
                 const cellElement = document.createElement('td');
                 cellElement.setAttribute('data-row', i.toString());
                 cellElement.setAttribute('data-column', j.toString());
+                const cellId = `${i}-${j}`;
+                if (this.hitCells.has(cellId)) {
+                    cellElement.classList.add('hit');
+                } else if (this.missedCells.has(cellId)) {
+                    cellElement.classList.add('miss');
+                }
+                cellElement.setAttribute('data-playerNumber', playerNumber.toString());
                 cellElement.classList.add('board-cell');
                 rowElement.appendChild(cellElement);
             });
@@ -446,7 +462,21 @@ export class Board {
         boardDiv.appendChild(boardElement); // Add the board to the DOM
     }
 
-
+    updateCellDisplay(row: number, column: number, isHit: boolean, opponentNumber: number) {
+        const cellClass = isHit ? 'hit' : 'miss';
+    
+        // For the active board
+        const activeCell = document.querySelector(`.activeBoard [data-row="${row}"][data-column="${column}"][data-playerNumber="${opponentNumber}"]`);
+        if (activeCell) {
+          activeCell.classList.add(cellClass);
+        }
+    
+        // For the small grid boards
+        const smallCell = document.querySelector(`.boardGrid [data-row="${row}"][data-column="${column}"][data-playerNumber="${opponentNumber}"]`);
+        if (smallCell) {
+          smallCell.classList.add(cellClass);
+        }
+      }
     
 
     hitCell(cell: { row: number, column: number, shipId: number }) {

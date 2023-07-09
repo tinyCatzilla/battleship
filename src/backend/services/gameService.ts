@@ -107,7 +107,7 @@ export class GameService {
         var opponentBoard = game.boards[opponentNumber]
         if (opponentBoard[row][column].isHit) {
             console.log('FRONTEND/BACKEND DESYNC: cell already hit');
-            return {hit: false, sunk: false};
+            return { status: 'error', message: 'cell already hit' };
         }
     
         if (opponentBoard[row][column].hasShip) {
