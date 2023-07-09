@@ -90,13 +90,16 @@ wss.on('connection', (ws: WS) => {
                             ws.send(JSON.stringify({ type: 'error', message: fireResult.message }));
                             console.log('sent error to client');
                         } else {
-                           broadcastToGame(data.gameId,{ type: 'fire',
+                            broadcastToGame(data.gameId,{ type: 'fire',
                             opponentNumber: data.opponentNumber,
                             row: data.row,
                             column: data.column,
                             hit: fireResult.hit,
                             sunk: fireResult.sunk,
                             gameOver: fireResult.gameOver });
+                            if (fireResult.hit === false){
+                                broadcast(data.gameId,{ type: 'nextturn', opponentNumber: data.opponentNumber});
+                            }
                             console.log('fire broadcasted to game:', data.gameId);
                         }
                         break;
