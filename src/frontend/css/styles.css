@@ -266,15 +266,46 @@ table {
 .gameScreen {
     display: none;
 }
-.leftBoards {
-    background:red;
+.gameScreen {
+    display: none;
+    flex-grow: 1;
 }
-.rightBoards {
-    background:blue;
-}
-
-.boardGrid {
+.gameMain {
     display: grid;
     grid-template-columns: 1fr 3fr;
     flex-grow: 1;
+}
+.leftBoards {
+    /* background:red; */
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+}
+.rightBoards {
+    /* background:blue; */
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+}
+
+.centeredContainer {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 100%;
+}
+
+.boardGrid {
+    width: 100%;
+}
+
+.activeBoard {
+    /* background:yellow; */
+}
+.board-small {
+    float: left;
+    margin: 10px;
 }
