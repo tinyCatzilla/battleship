@@ -1,5 +1,6 @@
 // src/backend/services/gameService.ts
 
+import { get } from 'http';
 import {Game} from '../models/game.js';
 import {Board} from '../models/game.js';
 
@@ -95,31 +96,34 @@ export class GameService {
     startGame(gameId: string) {
         const game = this.games.get(gameId);
         if (!game) { return { status: 'error', message: 'Game not found' };  }
-        var turn = Math.floor(Math.random() * game.totalPlayers+1);
+        var turn = game.playerTurn;
         return {turn: turn};
     }
 
-    fire(gameId: string, opponentNumber: number, cell: { row: number, column: number, shipId: number }) {
+    fire(gameId: string, opponentNumber: number, row: number, column: number) {
         const game = this.games.get(gameId);
         if (!game) { return { status: 'error', message: 'Game not found' };  }
     
         var opponentBoard = game.boards[opponentNumber]
-        if (opponentBoard[cell.row][cell.column].isHit) {
+        if (opponentBoard[row][column].isHit) {
             console.log('FRONTEND/BACKEND DESYNC: cell already hit');
             return {hit: false, sunk: false};
         }
     
-        if (opponentBoard[cell.row][cell.column].hasShip) {
-            opponentBoard[cell.row][cell.column].isHit = true;
-            game.remaining[opponentNumber][cell.shipId]--;
-            const isSunk = game.remaining[opponentNumber][cell.shipId] === 0;
+        if (opponentBoard[row][column].hasShip) {
+            opponentBoard[row][column].isHit = true;
+            const cell = game.getShipCell(opponentNumber, row, column);
+            if (!cell) { return { status: 'error', message: 'Cell not found' }; }
+            const shipId = cell.shipId;
+            game.remaining[opponentNumber][shipId]--;
+            const isSunk = game.remaining[opponentNumber][shipId] === 0;
             const isGameOver = game.isGameOver(opponentNumber);
     
             game.boards[opponentNumber] = opponentBoard;
             return {hit: true, sunk: isSunk, gameOver: isGameOver};
         }
         else {
-            opponentBoard[cell.row][cell.column].isHit = true;
+            opponentBoard[row][column].isHit = true;
             game.boards[opponentNumber] = opponentBoard;
             return {hit: false, sunk: false, gameOver: false};
         }

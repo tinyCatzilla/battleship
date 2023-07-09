@@ -381,15 +381,8 @@ export class Board {
         this.locked = true;
     }
 
-    startGame() {
-        // starts game
-        // render all boards
-        // lock all boards
-        // enable click event handlers for enemy board
-        // disable click event handlers for player board
-    }
-
     rendersmall() {
+        // creates an empty board in boardgrid
         const boardDiv = document.querySelector(".boardGrid");
         if (!boardDiv) return;
         // Render the board as an HTML table
@@ -400,18 +393,34 @@ export class Board {
                 const cellElement = document.createElement('td');
                 cellElement.setAttribute('data-row', i.toString());
                 cellElement.setAttribute('data-column', j.toString());
-                cellElement.classList.add('board-cell');
+                cellElement.classList.add('board-cell-small');
                 rowElement.appendChild(cellElement);
             });
             boardElement.appendChild(rowElement);
         });
         boardDiv.appendChild(boardElement); // Add the board to the DOM
-        this.smallEventListeners(); // Add event listeners
+        // this.smallEventListeners(); // Add event listeners
     }
 
-    smallEventListeners() {
+    rendersmallplayer() {
+        const boardDiv = document.querySelector(".playerBoard");
+        if (!boardDiv) return;
+        // Render the board as an HTML table
+        const boardElement = document.createElement('table');
+        this.shipBoard.forEach((row, i) => {
+            const rowElement = document.createElement('tr');
+            row.forEach((cell, j) => {
+                const cellElement = document.createElement('td');
+                cellElement.setAttribute('data-row', i.toString());
+                cellElement.setAttribute('data-column', j.toString());
+                cellElement.classList.add('board-cell-player');
+                rowElement.appendChild(cellElement);
+            });
+            boardElement.appendChild(rowElement);
+        });
+        boardDiv.appendChild(boardElement); // Add the board to the DOM
+        this.updateDisplay(); // Update the display
     }
-
     
 
     hitCell(cell: { row: number, column: number, shipId: number }) {

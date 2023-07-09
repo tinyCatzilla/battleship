@@ -158,7 +158,12 @@ table {
     height: 1.5vw;
 }
 
-.board-cell, .board-cell-small {
+.board-cell-player {
+    width: 1.5vw;
+    height: 1.5vw;
+}
+
+.board-cell, .board-cell-small, .board-cell-player {
     border: 1px solid rgba(0, 0, 0, 0.301);
     text-align: center;
     background-color: var(--board-bg);

@@ -18,25 +18,62 @@ class GameClient {
 
         this.socket.onmessage = (event) => {
             const data = JSON.parse(event.data);
-        
-            switch (data.type) {
-                case 'totalPlayersUpdate':
-                    const totalPlayersElement = document.getElementById("totalPlayers");
-                    if (totalPlayersElement) {
-                        totalPlayersElement.textContent = `Total Players: ${data.totalPlayers}`;
-                    }
-                    break;
-                case 'playersReadyUpdate':
-                    const playersReadyElement = document.getElementById("playersReady");
-                    if (playersReadyElement) {
-                        playersReadyElement.textContent = `Players Ready: ${data.playersReady}`;
-                    }
-
-                    break;
-                // Handle other message types...
+            if (data.type === 'usernameUpdate') {
+                this.handleUsernameUpdate(data);
+            }
+            else if (data.type === 'joinGame'){
+                if (data.success === true) {
+                    history.pushState({}, '', `/${this.gameId}`);
+                    this.playerNumber = data.playerNumber; // use the player number sent by the server
+                    this.game = new Game(this.gameId, this.playerNumber);
+                    this.game.render();
+                    const lobbyCode = document.querySelector("#lobbyCode") as HTMLElement;
+                    lobbyCode.textContent = `${this.gameId}`;
+                } else {
+                    // Handle the case where joining the game was not successful
+                    alert("Failed to join the game.");
+                }
+            }
+            else if (data.type === 'leaveGame') {
+                if (data.success === true) {
+                    history.pushState({}, '', `/`);
+                    this.gameId = "";
+                    this.playerNumber = -1;
+                    this.game.unrender();
+                    this.game = new Game(this.gameId, this.playerNumber);
+                    this.displayTitleScreen();
+                } else {
+                    // Handle the case where leaving the game was not successful
+                    alert("Failed to leave the game.");
+                }
+            }
+            else if (data.type === 'confirmPlacement') {
+                this.handleConfirmPlacement(data);
+            }
+            else if (data.type === 'startGame'){
+                this.displayGameScreen();
+                this.game.startGame();
+                console.log('all players ready, starting game');
             }
         };
+    }
 
+    handleUsernameUpdate(data: any) {
+        this.usernames = data.usernames;
+        console.log('usernames:', this.usernames);
+        this.updateUsers();
+    }
+
+    handleConfirmPlacement(data: any) {
+        console.log('confirmPlacement response received');
+        this.game.lockBoard();
+        this.lockConfirmPlacementButton();
+        console.log('board locked');
+        const readyButton = document.querySelector("#readyButton") as HTMLElement; 
+        readyButton.textContent = "Waiting for other players"; // set readybutton text to Waiting for other players
+    
+        readyButton.classList.add("btnGreenSelected"); // set readbutton to have class btnRedSelected
+        readyButton.classList.remove("btnGreen"); // remove btnRed class from readybutton
     }
 
     createRoom(username: string) {
@@ -52,14 +89,6 @@ class GameClient {
             this.gameId = gameId;
             this.playerNumber = 1; // The creator of the room will be player 1
             this.username = username;
-            this.socket.onmessage = (event) => {
-                const data = JSON.parse(event.data);
-                if (data.type === 'createGame') {
-                    this.usernames = data.usernames;
-                    console.log('usernames:', this.usernames);
-                    this.updateUsers();
-                }
-            };
             this.game = new Game(gameId, 1);
             this.game.render();
             const lobbyCode = document.querySelector("#lobbyCode") as HTMLElement;
@@ -77,55 +106,19 @@ class GameClient {
             this.displayLobbyScreen();
             // Send the join room request to the server
             this.socket.send(JSON.stringify({type: 'joinGame', data: {gameId: id, username: username}}));
-            // Set up a listener for the response from the server
-            this.socket.onmessage = (event) => {
-                const data = JSON.parse(event.data);
-                // Check if the response type is for joining game and if the join was successful
-                if (data.type === 'joinGame' && data.success === true) {
-                    history.pushState({}, '', `/game/${id}`);
-                    this.gameId = id;
-                    this.playerNumber = data.playerNumber; // use the player number sent by the server
-                    this.username = username;
-                    this.usernames = data.usernames;
-                    console.log('usernames:', this.usernames);
-                    this.updateUsers();
-                    this.game = new Game(id, this.playerNumber);
-                    this.game.render();
-                    const lobbyCode = document.querySelector("#lobbyCode") as HTMLElement;
-                    lobbyCode.textContent = `${id}`;
-                } else {
-                    // Handle the case where joining the game was not successful
-                    alert("Failed to join the game.");
-                }
-            };
+            this.username = username;
+            this.gameId = id;
         }
-
-        // prevent if gamestarts
     }
     
     leaveRoom() {
          // Send the leave room request to the server
         this.socket.send(JSON.stringify({ type: 'leaveGame', data: {gameId: this.gameId} }));
-
-        // Set up a listener for the response from the server
-        this.socket.onmessage = (event) => {
-            const data = JSON.parse(event.data);
-            if (data.type === 'leaveGame' && data.success === true) {
-                history.pushState({}, '', `/`);
-                this.gameId = "";
-                this.playerNumber = -1;
-                this.game.unrender();
-                this.game = new Game(this.gameId, this.playerNumber);
-                this.displayTitleScreen();
-            } else {
-                // Handle the case where leaving the game was not successful
-                alert("Failed to leave the game.");
-            }
-            // TODO IMPORTANT: PLAYER 1 LEAVING
-        };
+            // TODO IMPORTANT: PLAYER 1 LEAVING GAME
     }
 
     updateUsers() {
+        console.log('updateUsers called')
         const playerListDiv = document.querySelector(".playerList") as HTMLElement;
         playerListDiv.innerHTML = "";
         for (let i = 0; i < this.usernames.length; i++) {
@@ -147,31 +140,6 @@ class GameClient {
     confirmPlacement() {
         // Send a message to the backend indicating that the player has confirmed their placement
         this.socket.send(JSON.stringify({ type: "confirmPlacement", data: { gameId: this.gameId, playerNumber: this.playerNumber, shipCells: this.game.getShips().shipCells} }));
-        // Set up a listener for the response from the server
-        this.socket.onmessage = (event) => {
-            const data = JSON.parse(event.data);
-            if (data.type === 'confirmPlacement') {
-                this.game.lockBoard();
-                this.lockConfirmPlacementButton();
-                console.log('board locked')
-
-                this.usernames = data.usernames;
-                this.updateUsers();
-
-                const readyButton = document.querySelector("#readyButton") as HTMLElement; 
-                readyButton.textContent = "Waiting for other players"; // set readybutton text to Waiting for other players
-                
-                readyButton.classList.add("btnGreenSelected"); // set readbutton to have class btnRedSelected
-                readyButton.classList.remove("btnGreen"); // remove btnRed class from readybutton
-
-                if (data.start == true){
-                    this.displayGameScreen();
-                    this.game.startGame();
-                    console.log('all players ready, starting game')
-                }
-            }
-            // else pass
-        };
     }
 
 

@@ -4,8 +4,6 @@ import { GameService } from './services/gameService.js';
 import http from 'http';
 import { WebSocketServer } from 'ws';
 import WS from 'ws';
-import { Game } from './models/game.js';
-import { send } from 'process';
 
 // Initialize express app
 const app = express();
@@ -27,6 +25,7 @@ const server = http.createServer(app);
 const wss = new WebSocketServer({ server });
 var service = new GameService;
 const gameClients = new Map<string, WS[]>();
+const games = new Map<string, WS[]>();
 
 wss.on('connection', (ws: WS) => {
     let currentGameId: string | null = null;
@@ -35,24 +34,27 @@ wss.on('connection', (ws: WS) => {
         if (typeof messageString === 'string') {
             const { type, data } = JSON.parse(messageString);
             handleGameAction(type, data, ws);
-            async function handleGameAction(type: string, data: any, ws: WS) {
+            function handleGameAction(type: string, data: any, ws: WS) {
                 switch (type) {
                     case 'createGame':
                         service.createGame(data.gameId, data.username);
                         addToGameClients(data.gameId, ws);
                         console.log(service.usernames.get(data.gameId));
-                        ws.send(JSON.stringify({ type: 'createGame', usernames: service.usernames.get(data.gameId) }));
+                        ws.send(JSON.stringify({ type: 'usernameUpdate', usernames: service.usernames.get(data.gameId) }));
+                        console.log('username update', data.gameId);
                         console.log('Game created:', data.gameId);
                         break;
                     case 'joinGame':
                         const joinResult = service.joinGame(data.gameId, data.username);
                         const usernames = service.usernames.get(data.gameId);
-                        ws.send(JSON.stringify({ type: 'joinGame', success: joinResult.success, playerNumber: joinResult.playerNumber, usernames: usernames }));
+                        console.log(service.usernames.get(data.gameId));
+                        ws.send(JSON.stringify({ type: 'joinGame', success: joinResult.success, playerNumber: joinResult.playerNumber}));
                         if (joinResult.success) {
                             addToGameClients(data.gameId, ws);
-                            currentGameId = data.gameId;
                             console.log('Joined game:', data.gameId);
                         }
+                        broadcast(data.gameId,{ type: 'usernameUpdate', usernames: usernames });
+                        console.log('username update', data.gameId);
                         break;
                     case 'leaveGame':
                         const leaveResult = service.leaveGame(data.gameId, data.playerNumber);
@@ -62,22 +64,26 @@ wss.on('connection', (ws: WS) => {
                     case 'confirmPlacement':
                         const confirmPlacement = service.confirmPlacement(data.gameId, data.playerNumber, data.shipCells);
                         console.log('confirmPlacement result:', confirmPlacement);
-                        ws.send(JSON.stringify({ type: 'confirmPlacement', start: confirmPlacement.start, usernames: confirmPlacement.usernames }));
-                        console.log('sent confirmPlacement result to client');
-                        const playersReady = service.getPlayersReady(data.gameId); // this just calls number of players ready, doesnt do anything rn
-                        broadcast(data.gameId, { type: 'playersReadyUpdate', playersReady: playersReady });
+                        // Broadcast the result to all clients in the game (attempting)
+                        ws.send(JSON.stringify({ type: 'confirmPlacement'}));
+                        broadcast(data.gameId,{ type: 'usernameUpdate', usernames: confirmPlacement.usernames });
+                        console.log('username update', data.gameId);
+                        if (confirmPlacement.start){
+                            broadcast(data.gameId,{ type: 'startGame'});
+                        }
+                        console.log('confirmPlacement', data.gameId);
                         break;
                     case 'startGame':
+                        addToGames(data.gameId, ws);
                         const startGame = service.startGame(data.gameId);
                         const totalPlayers = service.getTotalPlayers(data.gameId);
-                        console.log('startGame result:', startGame);
                         ws.send(JSON.stringify({ type: 'startGame', totalPlayers: totalPlayers, turn: startGame.turn}));
-                        console.log('sent startGame result to client');
+                        console.log('startGame for client in', data.gameId);
                         break;
                     case 'fire':
                         console.log('fire data:', data);
                         // Assuming data is { gameId, opponentNumber, cell }
-                        const fireResult = service.fire(data.gameId, data.opponentNumber, data.cell);
+                        const fireResult = service.fire(data.gameId, data.opponentNumber, data.column, data.row);
                         console.log('fire result:', fireResult);
                         if (fireResult.status === 'error') {
                             // The fire function could not be executed successfully. Respond accordingly.
@@ -117,12 +123,29 @@ wss.on('connection', (ws: WS) => {
     function addToGameClients(gameId: string, client: WS) {
         let clients = gameClients.get(gameId);
         if (!clients) {
-            clients = [];
+            clients = [client];
             gameClients.set(gameId, clients);
             console.log('First client initialized', gameId);
         }
-        clients.push(client);
-        console.log('Client added to game:', gameId);
+        else {
+            clients.push(client);
+            console.log('Client added to game:', gameId);
+        }
+        console.log('Number of clients in game:', gameId, clients.length);
+    }
+
+    function addToGames(gameId: string, client: WS) {
+        let clients = games.get(gameId);
+        if (!clients) {
+            clients = [client];
+            games.set(gameId, clients);
+            console.log('First client initialized', gameId);
+        }
+        else {
+            clients.push(client);
+            console.log('Client added to game:', gameId);
+        }
+        console.log('Number of clients in game:', gameId, clients.length);
     }
 });
 

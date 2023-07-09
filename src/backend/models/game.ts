@@ -33,6 +33,7 @@ export class Game {
     remaining: number[][];
     playersReady: number;
     playerTurn: number;
+    allshipCells: Map<number, { row: number, column: number, shipId: number }[]>;
 
 
     constructor(gameId: string) {
@@ -44,10 +45,12 @@ export class Game {
         // note that player0 isnt real.
         this.remaining = [];
         this.playersReady = 0;
-        this.playerTurn = -1;
+        this.playerTurn = Math.floor(Math.random() * this.totalPlayers)+1;
+        this.allshipCells = new Map();
     }
 
     placeShips(playerNumber: number, shipCells: { row: number, column: number, shipId: number }[] = []) {
+        this.allshipCells.set(playerNumber,shipCells);
         let board = this.boards[playerNumber];
 
         // Intermediate object to store counts for each shipId
@@ -66,6 +69,15 @@ export class Game {
         // Convert the intermediate object into an array
         this.remaining[playerNumber] = Object.keys(shipIdCounts).map((key) => shipIdCounts[parseInt(key)]);
     }
+
+    getShipCell(playerNumber: number, row: number, column: number) {
+        var shipCells = this.allshipCells.get(playerNumber)
+        if (!shipCells) {
+            return undefined;
+        }
+        return shipCells.find(cell => cell.row === row && cell.column === column);
+    }
+        
 
     get getTotalPlayers() {
         return this.totalPlayers;
