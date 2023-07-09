@@ -1,4 +1,5 @@
 import { Game } from "./game.js";
+import { Board } from './board.js';
 
 class GameClient {
     socket: WebSocket;
@@ -7,6 +8,7 @@ class GameClient {
     game: Game;
     username: string;
     usernames: string[];
+    private playerBoard: Board;
 
     constructor() {
         this.socket = new WebSocket("ws://localhost:3050");
@@ -15,6 +17,7 @@ class GameClient {
         this.game = new Game(this.gameId, this.playerNumber);
         this.username = "";
         this.usernames = [];
+        this.playerBoard = new Board();
 
         this.socket.onmessage = (event) => {
             const data = JSON.parse(event.data);
@@ -26,7 +29,7 @@ class GameClient {
                     history.pushState({}, '', `/${this.gameId}`);
                     this.playerNumber = data.playerNumber; // use the player number sent by the server
                     this.game = new Game(this.gameId, this.playerNumber);
-                    this.game.render();
+                    this.render();
                     const lobbyCode = document.querySelector("#lobbyCode") as HTMLElement;
                     lobbyCode.textContent = `${this.gameId}`;
                 } else {
@@ -39,7 +42,7 @@ class GameClient {
                     history.pushState({}, '', `/`);
                     this.gameId = "";
                     this.playerNumber = -1;
-                    this.game.unrender();
+                    this.unrender();
                     this.game = new Game(this.gameId, this.playerNumber);
                     this.displayTitleScreen();
                 } else {
@@ -52,6 +55,10 @@ class GameClient {
             }
             else if (data.type === 'startGame'){
                 this.displayGameScreen();
+                console.log(data.totalPlayers);
+                this.game.totalPlayers = data.totalPlayers;
+                this.game.playersLeft = data.totalPlayers;
+                this.game.turn = data.turn;
                 this.game.startGame();
                 console.log('all players ready, starting game');
             }
@@ -66,7 +73,7 @@ class GameClient {
 
     handleConfirmPlacement(data: any) {
         console.log('confirmPlacement response received');
-        this.game.lockBoard();
+        this.playerBoard.lockBoard();
         this.lockConfirmPlacementButton();
         console.log('board locked');
         const readyButton = document.querySelector("#readyButton") as HTMLElement; 
@@ -89,8 +96,8 @@ class GameClient {
             this.gameId = gameId;
             this.playerNumber = 1; // The creator of the room will be player 1
             this.username = username;
-            this.game = new Game(gameId, 1);
-            this.game.render();
+            this.game = new Game(this.gameId, this.playerNumber);
+            this.render();
             const lobbyCode = document.querySelector("#lobbyCode") as HTMLElement;
             lobbyCode.textContent = `${gameId}`;
         }
@@ -114,7 +121,17 @@ class GameClient {
     leaveRoom() {
          // Send the leave room request to the server
         this.socket.send(JSON.stringify({ type: 'leaveGame', data: {gameId: this.gameId} }));
+        this.unlockConfirmPlacementButton();
             // TODO IMPORTANT: PLAYER 1 LEAVING GAME
+    }
+
+    render() {
+        this.playerBoard.render();
+        this.playerBoard.placeInitialShips([{ size: 1, count: 3 }, { size: 2, count: 2 }, { size: 3, count: 1 }]);
+    }
+
+    unrender() {
+        this.playerBoard.unrender();
     }
 
     updateUsers() {
@@ -139,13 +156,22 @@ class GameClient {
 
     confirmPlacement() {
         // Send a message to the backend indicating that the player has confirmed their placement
-        this.socket.send(JSON.stringify({ type: "confirmPlacement", data: { gameId: this.gameId, playerNumber: this.playerNumber, shipCells: this.game.getShips().shipCells} }));
+        this.socket.send(JSON.stringify({ type: "confirmPlacement", data: { gameId: this.gameId, playerNumber: this.playerNumber, shipCells: this.playerBoard.getShips.shipCells} }));
     }
 
 
     lockConfirmPlacementButton() {
         const confirmButton = document.getElementById("readyButton") as HTMLButtonElement;
         confirmButton.disabled = true;
+    }
+
+    unlockConfirmPlacementButton() {
+        const confirmButton = document.getElementById("readyButton") as HTMLButtonElement;
+        confirmButton.disabled = false;
+        const readyButton = document.querySelector("#readyButton") as HTMLElement; 
+        readyButton.textContent = "Ready"; // set readybutton text to ready
+        readyButton.classList.remove("btnGreenSelected"); // remove btnGreenSelected class from readybutton
+        readyButton.classList.add("btnGreen"); // add btnGreen class to readybutton
     }
 
     displayTitleScreen() {

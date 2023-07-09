@@ -381,7 +381,7 @@ export class Board {
         this.locked = true;
     }
 
-    rendersmall() {
+    rendersmall(playerNumber: number) {
         // creates an empty board in boardgrid
         const boardDiv = document.querySelector(".boardGrid");
         if (!boardDiv) return;
@@ -397,9 +397,10 @@ export class Board {
                 rowElement.appendChild(cellElement);
             });
             boardElement.appendChild(rowElement);
+            boardElement.classList.add('board-small');
+            boardElement.id = `small-board-${playerNumber}`;
         });
         boardDiv.appendChild(boardElement); // Add the board to the DOM
-        // this.smallEventListeners(); // Add event listeners
     }
 
     rendersmallplayer() {
@@ -421,6 +422,31 @@ export class Board {
         boardDiv.appendChild(boardElement); // Add the board to the DOM
         this.updateDisplay(); // Update the display
     }
+
+    renderactive() {
+        const boardDiv = document.querySelector(".activeBoard");
+        if (!boardDiv) return;
+        // Remove all previous children
+        while (boardDiv.firstChild) {
+            boardDiv.firstChild.remove();
+        }
+        // Render the board as an HTML table
+        const boardElement = document.createElement('table');
+        this.shipBoard.forEach((row, i) => {
+            const rowElement = document.createElement('tr');
+            row.forEach((cell, j) => {
+                const cellElement = document.createElement('td');
+                cellElement.setAttribute('data-row', i.toString());
+                cellElement.setAttribute('data-column', j.toString());
+                cellElement.classList.add('board-cell');
+                rowElement.appendChild(cellElement);
+            });
+            boardElement.appendChild(rowElement);
+        });
+        boardDiv.appendChild(boardElement); // Add the board to the DOM
+    }
+
+
     
 
     hitCell(cell: { row: number, column: number, shipId: number }) {

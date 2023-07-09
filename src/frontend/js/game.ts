@@ -2,87 +2,106 @@ import { Board } from './board.js';
 
 export class Game {
     private gameId: string;
-    private playerBoard: Board;
-    private boards: Board[];
-    private myTurn: boolean;
-    private gameOver: boolean;
+    private boards: Map <number, Board>;
     private socket: WebSocket;
-    private myPlayerNumber: number;
-    private totalPlayers: number;
+    myPlayerNumber: number;
+    totalPlayers: number;
+    private selectedBoardId: number;
+
+    playersLeft: number;
+    turn: number;
 
     constructor(gameId: string, myPlayerNumber: number) {
         this.gameId = gameId;
-        this.playerBoard = new Board();
-        this.boards = [this.playerBoard];
-        this.myTurn = false;
-        this.gameOver = false;
+        this.boards = new Map();
         this.socket = new WebSocket(`ws://localhost:3050/${gameId}`);
         this.myPlayerNumber = myPlayerNumber;
         this.totalPlayers = -1;
+        this.playersLeft = -1;
+        this.turn = -1;
+        this.selectedBoardId = -1;
         
         this.socket.onmessage = (event) => {
             const data = JSON.parse(event.data);
             switch (data.type) {
-                case 'startGame':
-                    this.totalPlayers = data.totalPlayers;
-                    this.myTurn = (data.turn == this.myPlayerNumber);
-                    for (let i = 0; i < this.totalPlayers; i++) {
-                        var board = new Board();
-                        this.boards.push(board);
-                    }
-                    break;
                 case 'fire':
                     if (data.hit){
-                        this.boards[data.opponentNumber-1].hitCell(data.cell);
+                        this.boards.get(data.opponentNumber)?.hitCell(data.cell);
                     }
                     else {
-                        this.boards[data.opponentNumber-1].missCell(data.cell);
-                        this.myTurn = false;
+                        this.boards.get(data.opponentNumber)?.missCell(data.cell);
+                        // this.myTurn = false;
                     }
                     if (data.sunk){
-                        this.boards[data.opponentNumber-1].sinkShip(data.cell);
+                        this.boards.get(data.opponentNumber)?.sinkShip(data.cell);
                     }
                     if (data.gameOver){
-                    this.boards[data.opponentNumber-1].gameOver();
+                        this.boards.get(data.opponentNumber)?.gameOver();
                     }
                     break;
             }
         };
     }
 
-    render() {
-        this.playerBoard.render();
-        this.playerBoard.placeInitialShips([{ size: 1, count: 3 }, { size: 2, count: 2 }, { size: 3, count: 1 }]);
-    }
-
-    rendersmall() {
-        this.playerBoard.rendersmall();
-    }
-
-    unrender() {
-        this.playerBoard.unrender();
-    }
-
-    lockBoard() {
-        this.playerBoard.lockBoard();
-    }
-
     startGame() {
-        // Tell the server that the game has started
-        this.socket.send(JSON.stringify({
-            type: 'startGame',
-            data: {gameId: this.gameId}
-        }));
-        this.rendersmall();
-        this.playerBoard.rendersmallplayer();
-        // this.smallEventListeners();
+        // render playerboard (with ships)
+        // render grid of empty opponent boards
+        // get firstturn from server
+        // render attacker board
+        // add event listener for each board on grid
+        // if board is clicked, render big board
+        // if big board is clicked, send attack to server
+        console.log(this.totalPlayers);
+        for (let i = 1; i <= this.totalPlayers; i++) {
+            var board = new Board();
+            this.boards.set(i, board);
+            if (i != this.myPlayerNumber) {
+                board.rendersmall(i);
+            }
+            else {
+                board.rendersmallplayer();
+            }
+        }
+        this.smallEventListeners();
+        this.showGrid();
     }
 
     smallEventListeners() {
-        const cells = document.querySelectorAll<HTMLTableCellElement>('.board-cell');
+        const cells = document.querySelectorAll<HTMLTableCellElement>('.board-small');
         cells.forEach((cell) => {
-            cell.addEventListener('click', this.fire);
+            cell.addEventListener('click', this.onSmallBoardClick);
         });
+        const backToGrid = document.querySelector("#backToGrid") as HTMLElement; 
+        backToGrid.addEventListener("click", () => this.showGrid());
+    }
+ 
+    onSmallBoardClick = (e: MouseEvent) => {
+        // Get the id of the board the clicked cell belongs to
+        const boardId = (e.target as HTMLElement).closest('table')?.id;
+        this.selectedBoardId = parseInt(boardId?.split('-')[2] || '0');
+    
+        // Get both board elements
+        const activeBoard = document.querySelector(".activeBoard") as HTMLElement;
+        const boardGrid = document.querySelector(".boardGrid") as HTMLElement;
+    
+        // Show the active board and hide the small board
+        if (activeBoard) activeBoard.style.display = "block";
+        if (boardGrid) boardGrid.style.display = "none";
+    
+        // Render the selected board on the active board
+        const board = this.boards.get(this.selectedBoardId);
+        if (board) board.renderactive();
+    }
+    
+    // should be called when back button is clicked
+    showGrid() {
+        // Get both board elements
+        const activeBoard = document.querySelector(".activeBoard") as HTMLElement;
+        const boardGrid = document.querySelector(".boardGrid") as HTMLElement;
+    
+        // Hide the active board and show the small board
+        if (activeBoard) activeBoard.style.display = "none";
+        if (boardGrid) boardGrid.style.display = "block";
     }
     
     fire = (e: MouseEvent) => {
@@ -102,25 +121,12 @@ export class Game {
         // TODO: check if game is over for everyone, aka you are last one standing
     }
 
-    makeMove(row: number, col: number) {
-        if (!this.myTurn) {
-        alert("Wait for your turn");
-        return;
-        }
-        // on click, fire() is called?
-    }
-
     leaveGame() {
         // Tell the server that the player has left the game
         this.socket.send(JSON.stringify({
             type: 'leaveGame',
             gameId: this.gameId
         }));
-    }
-
-    getShips() {
-        // This method can be used to return the current state of the player's board
-        return this.playerBoard.getShips;
     }
 
 
