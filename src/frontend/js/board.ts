@@ -52,7 +52,7 @@ export class Board {
     }
 
     private canPlaceShip(row: number, column: number, size: number, orientation: string, movingShipId?: number): boolean {
-        // Checks if the given input is a valid ship placement
+        // Check if the given input is a valid ship placement
         // PRECONDITION: row, column are the FIRST cell of the ship
         for (let i = 0; i < size; i++) {
             let cellRow = row;
@@ -74,9 +74,26 @@ export class Board {
                     return false;
                 }
             }
+    
+            // Check orthogonal cells for other ships
+            const directions = [[-1, 0], [1, 0], [0, -1], [0, 1]]; // Up, Down, Left, Right
+            for (let dir of directions) {
+                const newRow = cellRow + dir[0];
+                const newCol = cellColumn + dir[1];
+                // Check boundaries
+                if (newRow >= 0 && newRow < 8 && newCol >= 0 && newCol < 8) {
+                    if (this.shipBoard[newRow][newCol].hasShip) {
+                        // If the neighboring cell has a ship and it is not the moving ship
+                        const neighbourCell = this.getShipCell(newRow, newCol);
+                        if (!neighbourCell || neighbourCell.shipId !== movingShipId) {
+                            return false;
+                        }
+                    }
+                }
+            }
         }
         return true;
-    }
+    }    
 
     placeInitialShips(shipConfig: { size: number, count: number }[]) {
         let currentShipId = 0;
@@ -439,6 +456,33 @@ export class Board {
         this.updateDisplay(); // Update the display
     }
 
+    // renderattacker(playerNumber: number) {
+    //     const boardDiv = document.querySelector(".attackerBoard");
+    //     if (!boardDiv) return;
+    //     // Render the board as an HTML table
+    //     const boardElement = document.createElement('table');
+    //     boardElement.id = `small-board-${playerNumber}`;
+    //     this.shipBoard.forEach((row, i) => {
+    //         const rowElement = document.createElement('tr');
+    //         row.forEach((cell, j) => {
+    //             const cellElement = document.createElement('td');
+    //             cellElement.setAttribute('data-row', i.toString());
+    //             cellElement.setAttribute('data-column', j.toString());
+    //             const cellId = `${i}-${j}`;
+    //             if (this.hitCells.has(cellId)) {
+    //                 cellElement.classList.add('hit');
+    //             } else if (this.missedCells.has(cellId)) {
+    //                 cellElement.classList.add('miss');
+    //             }
+    //             cellElement.setAttribute('data-playerNumber', playerNumber.toString());
+    //             cellElement.classList.add('board-cell-attacker');
+    //             rowElement.appendChild(cellElement);
+    //         });
+    //         boardElement.appendChild(rowElement);
+    //     });
+    //     boardDiv.appendChild(boardElement); // Add the board to the DOM
+    // }
+
     renderactive(playerNumber: number) {
         const boardDiv = document.querySelector(".activeBoard");
         if (!boardDiv) return;
@@ -489,6 +533,12 @@ export class Board {
         if (playerCell) {
             playerCell.classList.add(cellClass);
         }
+
+        // For the attacker board
+        // const attackerCell = document.querySelector(`.attackerBoard [data-row="${row}"][data-column="${column}"]`);
+        // if (attackerCell) {
+        //     attackerCell.classList.add(cellClass);
+        // }
       }
     
 

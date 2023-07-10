@@ -143,6 +143,7 @@ class GameClient {
 
     unrender() {
         this.playerBoard.unrender();
+        this.playerBoard = new Board();
     }
 
     updateUsers() {
@@ -190,6 +191,10 @@ class GameClient {
         titleScreen?.style.setProperty("display", "block");
         let lobbyScreen = document.querySelector(".lobbyScreen") as HTMLElement;
         lobbyScreen?.style.setProperty("display", "none");
+        let gameScreen = document.querySelector(".gameScreen") as HTMLElement;
+        gameScreen?.style.setProperty("display", "none");
+        const leaveRoomButton = document.querySelector("#leaveRoomButton") as HTMLElement;
+        leaveRoomButton?.style.setProperty("display", "none");
     }
 
     displayLobbyScreen() {
@@ -197,6 +202,8 @@ class GameClient {
         titleScreen?.style.setProperty("display", "none");
         let lobbyScreen = document.querySelector(".lobbyScreen") as HTMLElement;
         lobbyScreen?.style.setProperty("display", "flex");
+        const leaveRoomButton = document.querySelector("#leaveRoomButton") as HTMLElement;
+        leaveRoomButton?.style.setProperty("display", "block");
     }
 
     displayGameScreen() {

@@ -33,23 +33,21 @@ export class Game {
         };
     }
 
+
+
+    // ily :)
+
+
+    
     startGame() {
-        // render playerboard (with ships)
-        // render grid of empty opponent boards
-        // get firstturn from server
-        // render attacker board
-        // add event listener for each board on grid
-        // if board is clicked, render big board
-        // if big board is clicked, send attack to server
         console.log(this.totalPlayers);
         for (let i = 1; i <= this.totalPlayers; i++) {
             var board = new Board();
             this.boards.set(i, board);
-            if (i != this.myPlayerNumber) {
-                board.rendersmall(i);
-            }
-            else {
+            if (i === this.myPlayerNumber) {
                 board.rendersmallplayer(i);
+            } else {
+                board.rendersmall(i);
             }
         }
         this.socket.send(JSON.stringify({type: 'initGame', data:{gameId: this.gameId}}));
@@ -75,10 +73,12 @@ export class Game {
         // Get both board elements
         const activeBoard = document.querySelector(".activeBoard") as HTMLElement;
         const boardGrid = document.querySelector(".boardGrid") as HTMLElement;
+        const backToGrid = document.querySelector("#backToGrid") as HTMLElement; 
     
         // Show the active board and hide the small board
         if (activeBoard) activeBoard.style.display = "block";
         if (boardGrid) boardGrid.style.display = "none";
+        if (backToGrid) backToGrid.style.display = "block";
     
         // Render the selected board on the active board
         const board = this.boards.get(this.selectedBoardId);
@@ -95,10 +95,12 @@ export class Game {
         // Get both board elements
         const activeBoard = document.querySelector(".activeBoard") as HTMLElement;
         const boardGrid = document.querySelector(".boardGrid") as HTMLElement;
+        const backToGrid = document.querySelector("#backToGrid") as HTMLElement; 
     
         // Hide the active board and show the small board
         if (activeBoard) activeBoard.style.display = "none";
         if (boardGrid) boardGrid.style.display = "block";
+        if (backToGrid) backToGrid.style.display = "none";
     }
     
     fire = (e: MouseEvent) => {
@@ -167,15 +169,4 @@ export class Game {
         winnerAlert.appendChild(returnButton);
         document.body.appendChild(winnerAlert);
     }
-
-    leaveGame() {
-        // Tell the server that the player has left the game
-        this.socket.send(JSON.stringify({
-            type: 'leaveGame',
-            gameId: this.gameId
-        }));
-    }
-
-
-
 }

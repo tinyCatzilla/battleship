@@ -207,6 +207,7 @@ table {
 
 #leaveRoomButton {
     right: 0;
+    display: none;
 }
 
 .logo {
@@ -272,7 +273,7 @@ table {
 }
 .gameMain {
     display: grid;
-    grid-template-columns: 1fr 3fr;
+    grid-template-columns: 1fr 3fr 1fr;
     flex-grow: 1;
 }
 .leftBoards {
@@ -281,12 +282,20 @@ table {
     flex-direction: column;
     justify-content: center;
     align-items: center;
+    /* background-color: #d3dce362; */
+    border: 2px solid var(--accent);
+    border-radius: 10px;
+    
 }
 .rightBoards {
     /* background:blue; */
     display: flex;
     flex-direction: column;
     align-items: flex-start;
+    /* background-color: #d3dce362; */
+}
+#backToGrid {
+    margin-top: 10px;
 }
 
 .centeredContainer {
@@ -307,5 +316,10 @@ table {
 }
 .board-small {
     float: left;
-    margin: 10px;
+    margin-left: 10px;
+    margin-top: 10px;
+}
+
+.chat {
+    background-color: var(--board-bg);
 }
