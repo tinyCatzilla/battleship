@@ -63,16 +63,12 @@ class GameClient {
                 this.game.turn = data.turn;
                 this.game.usernames = this.usernames;
                 this.turn = data.turn;
-                var playerTurn = document.querySelector("#playerTurn") as HTMLElement;
-                playerTurn.textContent = `${this.usernames[this.turn-1][0]}`;
                 this.game.startGame();
                 console.log('all players ready, starting game');
             }
             else if (data.type === 'nextturn'){
                 console.log('nextturn received');
                 this.turn = data.opponentNumber;
-                var playerTurn = document.querySelector("#playerTurn") as HTMLElement;
-                playerTurn.textContent = `${this.usernames[this.turn-1][0]}`;
             }
         };
     }

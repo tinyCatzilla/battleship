@@ -163,7 +163,19 @@ table {
     height: 1.5vw;
 }
 
-.board-cell, .board-cell-small, .board-cell-player {
+.board-cell-attacker {
+    width: 1.5vw;
+    height: 1.5vw;
+}
+
+.board-cell-active {
+    /* width: 30px;
+    height: 30px; */
+    width: 3vw;
+    height: 3vw;
+}
+
+.board-cell, .board-cell-small, .board-cell-player, .board-cell-attacker, .board-cell-active {
     border: 1px solid rgba(0, 0, 0, 0.301);
     text-align: center;
     background-color: var(--board-bg);

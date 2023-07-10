@@ -48,18 +48,17 @@ export class Game {
 
     
     startGame() {
-        console.log(this.totalPlayers);
         for (let i = 1; i <= this.totalPlayers; i++) {
             var board = new Board();
             this.boards.set(i, board);
             if (i != this.turn) {
-                board.rendersmallplayer(i, this.usernames[i-1][0]);
+                board.rendersmall(i, this.usernames[i-1][0]);
             } else {
-                board.renderattacker(i, this.usernames[i-1][0]);
+                board.renderattacker(i, this.usernames[i-1][0]); 
             }
         }
-        var playerboard = new Board();
-        playerboard.rendersmallplayer(this.myPlayerNumber, this.usernames[this.myPlayerNumber-1][0]);
+        var playerboard = this.boards.get(this.myPlayerNumber);
+        playerboard?.rendersmallplayer(this.myPlayerNumber, this.usernames[this.myPlayerNumber-1][0]);
         this.socket.send(JSON.stringify({type: 'initGame', data:{gameId: this.gameId}}));
         this.smallEventListeners();
         this.showGrid();
@@ -80,17 +79,13 @@ export class Game {
         if (this.turn != this.myPlayerNumber) { 
             return;
         }
+        console.log('small board clicked');
 
         // Get the id of the board the clicked cell belongs to
         const boardId = (e.target as HTMLElement).closest('table')?.id;
         var selectedBoardId = parseInt(boardId?.split('-')[2] || '0');
 
         this.socket.send(JSON.stringify({type: 'selectBoard', data:{gameId: this.gameId, boardId: selectedBoardId}}));
-
-        const activeCells = document.querySelectorAll<HTMLTableCellElement>('.board-cell');
-        activeCells.forEach((cell) => {
-            cell.addEventListener('click', this.fire);
-        });
     }
 
     renderSelectedBoard(selectedBoardId: number) {
@@ -107,6 +102,13 @@ export class Game {
         // Render the selected board on the active board
         const board = this.boards.get(selectedBoardId);
         if (board) board.renderactive(selectedBoardId);
+
+        if (this.turn == this.myPlayerNumber) {
+            const cells = document.querySelectorAll<HTMLTableCellElement>('.board-cell-active');
+            cells.forEach((cell) => {
+                cell.addEventListener('click', this.fire);
+            });
+        }
     }
 
     onBack() {
@@ -132,16 +134,32 @@ export class Game {
     }
 
     clearAttackerBoard() {
+        console.log('clear attacker board');
         const boardDiv = document.querySelector(".attackerBoard");
+        if (boardDiv) console.log("boardDiv found");
+        else console.log("boardDiv not found");
+        let x = 0;
+        while (boardDiv?.firstChild) {
+            boardDiv.firstChild.remove();
+            x++;
+            console.log(x);
+        }
+    }
+
+    clearBoardGrid() {
+        console.log('clear small board');
+        const boardDiv = document.querySelector(".boardGrid");
         while (boardDiv?.firstChild) {
             boardDiv.firstChild.remove();
         }
     }
     
     fire = (e: MouseEvent) => {
+        console.log('fire');
         if (this.turn != this.myPlayerNumber) {
             return;
         }
+        console.log('fire2');
         const target = e.target as HTMLElement;
         const row = +target.getAttribute('data-row')!;
         const column = +target.getAttribute('data-column')!;
@@ -188,7 +206,7 @@ export class Game {
                                 // NOTE: Assumes the orthogonal cells do not have ships on them.
                                 if (!opponentBoard.hitCells.has(orthogonalCellId)) {
                                     opponentBoard.missedCells.add(orthogonalCellId);
-                                    opponentBoard.updateCellDisplay(orthogonalCell.row, orthogonalCell.column, false, true, data.opponentNumber);
+                                    opponentBoard.updateCellDisplay(orthogonalCell.row, orthogonalCell.column, false, false, data.opponentNumber);
                                 }
                             }
                         });
@@ -214,8 +232,16 @@ export class Game {
                 this.turn = data.opponentNumber;
             
                 this.clearAttackerBoard(); // Clear the old attacker board
-                opponentBoard.renderattacker(this.turn, this.usernames[this.turn-1][0]);
-            
+                this.clearBoardGrid(); // Clear the old small board
+                for (let i = 1; i <= this.totalPlayers; i++) {
+                    var board = this.boards.get(i);
+                    if (i != this.turn) {
+                        board?.rendersmall(i, this.usernames[i-1][0]);
+                    } else {
+                        board?.renderattacker(i, this.usernames[i-1][0]); 
+                    }
+                }
+                this.smallEventListeners();
                 this.showGrid();
             }
             opponentBoard.updateCellDisplay(data.row, data.column, data.hit, false, data.opponentNumber);

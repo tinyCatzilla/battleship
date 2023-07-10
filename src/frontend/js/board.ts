@@ -531,7 +531,7 @@ export class Board {
                     cellElement.classList.add('sunk');
                 }
                 cellElement.setAttribute('data-playerNumber', playerNumber.toString());
-                cellElement.classList.add('board-cell');
+                cellElement.classList.add('board-cell-active');
                 rowElement.appendChild(cellElement);
             });
             boardElement.appendChild(rowElement);
