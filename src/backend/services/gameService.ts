@@ -3,6 +3,7 @@
 import { get } from 'http';
 import {Game} from '../models/game.js';
 import {Board} from '../models/game.js';
+import {Cell} from '../models/game.js';
 
 export class GameService {
     games: Map<string, Game>;
@@ -104,7 +105,7 @@ export class GameService {
         const game = this.games.get(gameId);
         if (!game) { return { status: 'error', message: 'Game not found' };  }
     
-        var opponentBoard = game.boards[opponentNumber]
+        var opponentBoard = game.boards[opponentNumber];
         if (opponentBoard[row][column].isHit) {
             console.log('FRONTEND/BACKEND DESYNC: cell already hit');
             return { status: 'error', message: 'cell already hit' };
@@ -118,9 +119,18 @@ export class GameService {
             game.remaining[opponentNumber][shipId]--;
             const isSunk = game.remaining[opponentNumber][shipId] === 0;
             const isGameOver = game.isGameOver(opponentNumber);
+            
+            let sunkShipCells: { row: number, column: number, shipId: number }[] = [];
+    
+            if (isSunk) {
+                const shipCells = game.allshipCells.get(opponentNumber);
+                if (shipCells) {
+                    sunkShipCells = shipCells.filter(cell => cell.shipId === shipId);
+                }
+            }
     
             game.boards[opponentNumber] = opponentBoard;
-            return {hit: true, sunk: isSunk, gameOver: isGameOver};
+            return {hit: true, sunk: isSunk, sunkShipCells, gameOver: isGameOver};
         }
         else {
             opponentBoard[row][column].isHit = true;
@@ -128,5 +138,7 @@ export class GameService {
             return {hit: false, sunk: false, gameOver: false};
         }
     }
+    
+    
     // Add other methods to manage the game state (e.g., make a move, check for win/lose, etc.)
 }

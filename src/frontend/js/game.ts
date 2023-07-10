@@ -6,10 +6,9 @@ export class Game {
     private socket: WebSocket;
     myPlayerNumber: number;
     totalPlayers: number;
-    private selectedBoardId: number;
-
     playersLeft: number;
     turn: number;
+    usernames: string[];
 
     constructor(gameId: string, myPlayerNumber: number) {
         this.gameId = gameId;
@@ -19,7 +18,7 @@ export class Game {
         this.totalPlayers = -1;
         this.playersLeft = -1;
         this.turn = -1;
-        this.selectedBoardId = -1;
+        this.usernames = [];
         
         this.socket.onmessage = (event) => {
             const data = JSON.parse(event.data);
@@ -29,6 +28,15 @@ export class Game {
                     console.log('fire received');
                     this.handleFireResponse(data);
                     break;
+                case 'selectBoard':
+                    console.log(data);
+                    console.log('selectBoard received');
+                    this.renderSelectedBoard(data.boardId);
+                    break;
+                case 'backToGrid':
+                    console.log(data);
+                    console.log('backToGrid received');
+                    this.showGrid();
             }
         };
     }
@@ -44,12 +52,14 @@ export class Game {
         for (let i = 1; i <= this.totalPlayers; i++) {
             var board = new Board();
             this.boards.set(i, board);
-            if (i === this.myPlayerNumber) {
-                board.rendersmallplayer(i);
+            if (i != this.turn) {
+                board.rendersmallplayer(i, this.usernames[i-1][0]);
             } else {
-                board.rendersmall(i);
+                board.renderattacker(i, this.usernames[i-1][0]);
             }
         }
+        var playerboard = new Board();
+        playerboard.rendersmallplayer(this.myPlayerNumber, this.usernames[this.myPlayerNumber-1][0]);
         this.socket.send(JSON.stringify({type: 'initGame', data:{gameId: this.gameId}}));
         this.smallEventListeners();
         this.showGrid();
@@ -62,14 +72,28 @@ export class Game {
         });
 
         const backToGrid = document.querySelector("#backToGrid") as HTMLElement; 
-        backToGrid.addEventListener("click", () => this.showGrid());
+        backToGrid.addEventListener("click", () => this.onBack());
     }
  
     onSmallBoardClick = (e: MouseEvent) => {
+        // only the player taking the turn can click
+        if (this.turn != this.myPlayerNumber) { 
+            return;
+        }
+
         // Get the id of the board the clicked cell belongs to
         const boardId = (e.target as HTMLElement).closest('table')?.id;
-        this.selectedBoardId = parseInt(boardId?.split('-')[2] || '0');
-    
+        var selectedBoardId = parseInt(boardId?.split('-')[2] || '0');
+
+        this.socket.send(JSON.stringify({type: 'selectBoard', data:{gameId: this.gameId, boardId: selectedBoardId}}));
+
+        const activeCells = document.querySelectorAll<HTMLTableCellElement>('.board-cell');
+        activeCells.forEach((cell) => {
+            cell.addEventListener('click', this.fire);
+        });
+    }
+
+    renderSelectedBoard(selectedBoardId: number) {
         // Get both board elements
         const activeBoard = document.querySelector(".activeBoard") as HTMLElement;
         const boardGrid = document.querySelector(".boardGrid") as HTMLElement;
@@ -81,16 +105,20 @@ export class Game {
         if (backToGrid) backToGrid.style.display = "block";
     
         // Render the selected board on the active board
-        const board = this.boards.get(this.selectedBoardId);
-        if (board) board.renderactive(this.selectedBoardId);
-
-        const activeCells = document.querySelectorAll<HTMLTableCellElement>('.board-cell');
-        activeCells.forEach((cell) => {
-            cell.addEventListener('click', this.fire);
-        });
+        const board = this.boards.get(selectedBoardId);
+        if (board) board.renderactive(selectedBoardId);
     }
-    
-    // should be called when back button is clicked
+
+    onBack() {
+        // only the player taking the turn can click
+        if (this.turn != this.myPlayerNumber) { 
+            return;
+        }
+
+        this.socket.send(JSON.stringify({type: 'backToGrid', data:{gameId: this.gameId}}));
+        
+    }
+
     showGrid() {
         // Get both board elements
         const activeBoard = document.querySelector(".activeBoard") as HTMLElement;
@@ -101,6 +129,13 @@ export class Game {
         if (activeBoard) activeBoard.style.display = "none";
         if (boardGrid) boardGrid.style.display = "block";
         if (backToGrid) backToGrid.style.display = "none";
+    }
+
+    clearAttackerBoard() {
+        const boardDiv = document.querySelector(".attackerBoard");
+        while (boardDiv?.firstChild) {
+            boardDiv.firstChild.remove();
+        }
     }
     
     fire = (e: MouseEvent) => {
@@ -115,6 +150,7 @@ export class Game {
             type: 'fire',
             data: {
                 gameId: this.gameId,
+                playerNumber : this.myPlayerNumber,
                 opponentNumber: opponentNumber,
                 row: row,
                 column: column,
@@ -129,8 +165,34 @@ export class Game {
             if (data.hit) {
                 opponentBoard.hitCells.add(cellId);
                 if (data.sunk) {
-                    // TODO
                     console.log(`A ship was sunk on player ${data.opponentNumber}'s board!`);
+                    // Mark all the cells of the sunk ship as sunk
+                    data.sunkShipCells.forEach((cell: {row: number, column: number}) => {
+                        const sunkCellId = `${cell.row}-${cell.column}`;
+                        opponentBoard.hitCells.add(sunkCellId);
+                        opponentBoard.updateCellDisplay(cell.row, cell.column, data.hit, true, data.opponentNumber);
+                    
+                        // Calculate the IDs of the orthogonal cells
+                        const orthogonalCells = [
+                            { row: cell.row - 1, column: cell.column },
+                            { row: cell.row + 1, column: cell.column },
+                            { row: cell.row, column: cell.column - 1 },
+                            { row: cell.row, column: cell.column + 1 }
+                        ];
+                    
+                        // Iterate over the orthogonal cells and check if they are in bounds
+                        orthogonalCells.forEach(orthogonalCell => {
+                            if (orthogonalCell.row >= 0 && orthogonalCell.row < 8 && orthogonalCell.column >= 0 && orthogonalCell.column < 8) {
+                                const orthogonalCellId = `${orthogonalCell.row}-${orthogonalCell.column}`;
+                                // Add the cell to the missedCells set if it's not already a hit cell
+                                // NOTE: Assumes the orthogonal cells do not have ships on them.
+                                if (!opponentBoard.hitCells.has(orthogonalCellId)) {
+                                    opponentBoard.missedCells.add(orthogonalCellId);
+                                    opponentBoard.updateCellDisplay(orthogonalCell.row, orthogonalCell.column, false, true, data.opponentNumber);
+                                }
+                            }
+                        });
+                    });
                     if (data.gameOver) {
                         console.log(`Player ${data.opponentNumber} has no ships left!`);
                         const smallBoard = document.querySelector(`#small-board-${data.opponentNumber}`);
@@ -142,31 +204,41 @@ export class Game {
                         
                         this.playersLeft -= 1;
                         if (this.playersLeft === 1) {
-                            console.log(`Player ${this.myPlayerNumber} is the last one standing!`);
-                            this.stopGame();
+                            console.log(`Player ${data.playerNumber} is the last one standing!`);
+                            this.stopGame(data.playerNumber);
                         }
                     }
                 }
             } else {
                 opponentBoard.missedCells.add(cellId);
                 this.turn = data.opponentNumber;
+            
+                this.clearAttackerBoard(); // Clear the old attacker board
+                opponentBoard.renderattacker(this.turn, this.usernames[this.turn-1][0]);
+            
+                this.showGrid();
             }
-            opponentBoard.updateCellDisplay(data.row, data.column, data.hit, data.opponentNumber);
+            opponentBoard.updateCellDisplay(data.row, data.column, data.hit, false, data.opponentNumber);
         }
     }
+    
 
-    stopGame() {
+    stopGame(winner: number) {
         console.log("Game has been stopped.");
     
-        const winnerAlert = document.createElement('div');
+        // Hide the game screen
+        const gameScreen = document.querySelector(".game-screen") as HTMLElement;
+        if (gameScreen) gameScreen.style.display = 'none';
+    
+        // Create a win screen
+        const winScreen = document.createElement('div');
+        winScreen.classList.add('win-screen');
+    
+        const winnerAlert = document.createElement('h1');
         winnerAlert.classList.add('winner-alert');
-        winnerAlert.textContent = `Congratulations! Player ${this.myPlayerNumber} has won!`;
+        winnerAlert.textContent = `Congratulations! Player ${winner} has won!`;
     
-        const returnButton = document.createElement('button');
-        returnButton.textContent = 'Return to lobby';
-        returnButton.classList.add('return-button');
-    
-        winnerAlert.appendChild(returnButton);
-        document.body.appendChild(winnerAlert);
+        winScreen.appendChild(winnerAlert);
+        document.body.appendChild(winScreen);
     }
 }

@@ -11,6 +11,7 @@ export class Board {
     private gameIsOver: boolean = false; // Whether this player's game is over
     hitCells = new Set<string>();
     missedCells = new Set<string>();
+    sunkCells = new Set<string>();
 
     
     constructor() {
@@ -400,10 +401,15 @@ export class Board {
         this.locked = true;
     }
 
-    rendersmall(playerNumber: number) {
+    rendersmall(playerNumber: number, username: string) {
         // creates an empty board in boardgrid
         const boardDiv = document.querySelector(".boardGrid");
         if (!boardDiv) return;
+        // Create an HTML element for the username and append it above the board
+        var usernameDiv = document.createElement('div');
+        usernameDiv.className = 'username';
+        usernameDiv.textContent = username;
+        boardDiv.appendChild(usernameDiv);
         // Render the board as an HTML table
         const boardElement = document.createElement('table');
         this.shipBoard.forEach((row, i) => {
@@ -417,6 +423,9 @@ export class Board {
                     cellElement.classList.add('hit');
                 } else if (this.missedCells.has(cellId)) {
                     cellElement.classList.add('miss');
+                }
+                if(this.sunkCells.has(cellId)) {
+                    cellElement.classList.add('sunk');
                 }
                 cellElement.setAttribute('data-playerNumber', playerNumber.toString());
                 cellElement.classList.add('board-cell-small');
@@ -429,9 +438,13 @@ export class Board {
         boardDiv.appendChild(boardElement); // Add the board to the DOM
     }
 
-    rendersmallplayer(playerNumber: number) {
+    rendersmallplayer(playerNumber: number, username: string) {
         const boardDiv = document.querySelector(".playerBoard");
         if (!boardDiv) return;
+        var usernameDiv = document.createElement('div');
+        usernameDiv.className = 'username';
+        usernameDiv.textContent = username;
+        boardDiv.appendChild(usernameDiv);
         // Render the board as an HTML table
         const boardElement = document.createElement('table');
         this.shipBoard.forEach((row, i) => {
@@ -446,6 +459,9 @@ export class Board {
                 } else if (this.missedCells.has(cellId)) {
                     cellElement.classList.add('miss');
                 }
+                if(this.sunkCells.has(cellId)) {
+                    cellElement.classList.add('sunk');
+                }
                 cellElement.setAttribute('data-playerNumber', playerNumber.toString());
                 cellElement.classList.add('board-cell-player');
                 rowElement.appendChild(cellElement);
@@ -456,32 +472,39 @@ export class Board {
         this.updateDisplay(); // Update the display
     }
 
-    // renderattacker(playerNumber: number) {
-    //     const boardDiv = document.querySelector(".attackerBoard");
-    //     if (!boardDiv) return;
-    //     // Render the board as an HTML table
-    //     const boardElement = document.createElement('table');
-    //     boardElement.id = `small-board-${playerNumber}`;
-    //     this.shipBoard.forEach((row, i) => {
-    //         const rowElement = document.createElement('tr');
-    //         row.forEach((cell, j) => {
-    //             const cellElement = document.createElement('td');
-    //             cellElement.setAttribute('data-row', i.toString());
-    //             cellElement.setAttribute('data-column', j.toString());
-    //             const cellId = `${i}-${j}`;
-    //             if (this.hitCells.has(cellId)) {
-    //                 cellElement.classList.add('hit');
-    //             } else if (this.missedCells.has(cellId)) {
-    //                 cellElement.classList.add('miss');
-    //             }
-    //             cellElement.setAttribute('data-playerNumber', playerNumber.toString());
-    //             cellElement.classList.add('board-cell-attacker');
-    //             rowElement.appendChild(cellElement);
-    //         });
-    //         boardElement.appendChild(rowElement);
-    //     });
-    //     boardDiv.appendChild(boardElement); // Add the board to the DOM
-    // }
+    renderattacker(playerNumber: number, username: string) {
+        const boardDiv = document.querySelector(".attackerBoard");
+        if (!boardDiv) return;
+        var usernameDiv = document.createElement('div');
+        usernameDiv.className = 'username';
+        usernameDiv.textContent = username;
+        boardDiv.appendChild(usernameDiv);
+        // Render the board as an HTML table
+        const boardElement = document.createElement('table');
+        boardElement.id = `small-board-${playerNumber}`;
+        this.shipBoard.forEach((row, i) => {
+            const rowElement = document.createElement('tr');
+            row.forEach((cell, j) => {
+                const cellElement = document.createElement('td');
+                cellElement.setAttribute('data-row', i.toString());
+                cellElement.setAttribute('data-column', j.toString());
+                const cellId = `${i}-${j}`;
+                if (this.hitCells.has(cellId)) {
+                    cellElement.classList.add('hit');
+                } else if (this.missedCells.has(cellId)) {
+                    cellElement.classList.add('miss');
+                }
+                if(this.sunkCells.has(cellId)) {
+                    cellElement.classList.add('sunk');
+                }
+                cellElement.setAttribute('data-playerNumber', playerNumber.toString());
+                cellElement.classList.add('board-cell-attacker');
+                rowElement.appendChild(cellElement);
+            });
+            boardElement.appendChild(rowElement);
+        });
+        boardDiv.appendChild(boardElement); // Add the board to the DOM
+    }
 
     renderactive(playerNumber: number) {
         const boardDiv = document.querySelector(".activeBoard");
@@ -504,6 +527,9 @@ export class Board {
                 } else if (this.missedCells.has(cellId)) {
                     cellElement.classList.add('miss');
                 }
+                if(this.sunkCells.has(cellId)) {
+                    cellElement.classList.add('sunk');
+                }
                 cellElement.setAttribute('data-playerNumber', playerNumber.toString());
                 cellElement.classList.add('board-cell');
                 rowElement.appendChild(cellElement);
@@ -513,56 +539,69 @@ export class Board {
         boardDiv.appendChild(boardElement); // Add the board to the DOM
     }
 
-    updateCellDisplay(row: number, column: number, isHit: boolean, playerNumber: number) {
+    updateCellDisplay(row: number, column: number, isHit: boolean, isSunk: boolean, playerNumber: number) {
         const cellClass = isHit ? 'hit' : 'miss';
     
         // For the active board
         const activeCell = document.querySelector(`.activeBoard [data-row="${row}"][data-column="${column}"][data-playerNumber="${playerNumber}"]`);
         if (activeCell) {
             activeCell.classList.add(cellClass);
+            if (isSunk) {
+                activeCell.classList.add('sunk');
+            }
         }
     
         // For the small grid boards
         const smallCell = document.querySelector(`.boardGrid [data-row="${row}"][data-column="${column}"][data-playerNumber="${playerNumber}"]`);
         if (smallCell) {
             smallCell.classList.add(cellClass);
+            if (isSunk) {
+                smallCell.classList.add('sunk');
+            }
         }
 
         // For the player board
         const playerCell = document.querySelector(`.playerBoard [data-row="${row}"][data-column="${column}"][data-playerNumber="${playerNumber}"]`);
         if (playerCell) {
             playerCell.classList.add(cellClass);
+            if (isSunk) {
+                playerCell.classList.add('sunk');
+            }
         }
 
         // For the attacker board
-        // const attackerCell = document.querySelector(`.attackerBoard [data-row="${row}"][data-column="${column}"]`);
-        // if (attackerCell) {
-        //     attackerCell.classList.add(cellClass);
-        // }
+        const attackerCell = document.querySelector(`.attackerBoard [data-row="${row}"][data-column="${column}"]`);
+        if (attackerCell) {
+            attackerCell.classList.add(cellClass);
+            if (isSunk) {
+                attackerCell.classList.add('sunk');
+            }
+        }
       }
     
 
-    hitCell(cell: { row: number, column: number, shipId: number }) {
-        const htmlcells = document.querySelectorAll<HTMLTableCellElement>('.board-cell');
-        const htmlcell = htmlcells[cell.row * 8 + cell.column];
-        htmlcell.classList.add('hit');
-    }
+    // hitCell(cell: { row: number, column: number, shipId: number }) {
+    //     const htmlcells = document.querySelectorAll<HTMLTableCellElement>('.board-cell');
+    //     const htmlcell = htmlcells[cell.row * 8 + cell.column];
+    //     htmlcell.classList.add('hit');
+    // }
 
-    missCell(cell: { row: number, column: number, shipId: number }) {
-        const htmlcells = document.querySelectorAll<HTMLTableCellElement>('.board-cell');
-        const htmlcell = htmlcells[cell.row * 8 + cell.column];
-        htmlcell.classList.add('miss');
-    }
+    // missCell(cell: { row: number, column: number, shipId: number }) {
+    //     const htmlcells = document.querySelectorAll<HTMLTableCellElement>('.board-cell');
+    //     const htmlcell = htmlcells[cell.row * 8 + cell.column];
+    //     htmlcell.classList.add('miss');
+    // }
 
-    sinkShip(cell: { row: number, column: number, shipId: number }) {
-        const shipCells = this.getShipCells(cell.shipId);
-        // traditionally, render cells around ship as missed
-    }
+    // sinkShip(cell: { row: number, column: number, shipId: number }) {
+    //     const htmlcells = document.querySelectorAll<HTMLTableCellElement>('.board-cell');
+    //     const htmlcell = htmlcells[cell.row * 8 + cell.column];
+    //     htmlcell.classList.add('sunk');
+    // }
 
-    gameOver() {
-        this.gameIsOver = true;
-        // render game over screen?
-    }
+    // gameOver() {
+    //     this.gameIsOver = true;
+    //     // render game over screen?
+    // }
 }
 
 

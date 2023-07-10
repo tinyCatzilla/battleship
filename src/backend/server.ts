@@ -90,19 +90,30 @@ wss.on('connection', (ws: WS) => {
                             ws.send(JSON.stringify({ type: 'error', message: fireResult.message }));
                             console.log('sent error to client');
                         } else {
-                            broadcastToGame(data.gameId,{ type: 'fire',
-                            opponentNumber: data.opponentNumber,
-                            row: data.row,
-                            column: data.column,
-                            hit: fireResult.hit,
-                            sunk: fireResult.sunk,
-                            gameOver: fireResult.gameOver });
+                            broadcastToGame(data.gameId,{
+                                type: 'fire',
+                                playerNumber: data.playerNumber,
+                                opponentNumber: data.opponentNumber,
+                                row: data.row,
+                                column: data.column,
+                                hit: fireResult.hit,
+                                sunk: fireResult.sunk,
+                                sunkShipCells: fireResult.sunkShipCells,
+                                gameOver: fireResult.gameOver 
+                            });
                             if (fireResult.hit === false){
                                 broadcast(data.gameId,{ type: 'nextturn', opponentNumber: data.opponentNumber});
                             }
                             console.log('fire broadcasted to game:', data.gameId);
                         }
                         break;
+                    case 'selectBoard':
+                        console.log('selectBoard data:', data);
+                        broadcastToGame(data.gameId,{ type: 'selectBoard', boardId: data.boardId});
+                        break;
+                    case 'backToGrid':
+                        console.log('backToGrid data:', data);
+                        broadcastToGame(data.gameId,{ type: 'backToGrid'});
                 }
             }
         }

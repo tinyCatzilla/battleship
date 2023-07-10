@@ -61,6 +61,7 @@ class GameClient {
                 this.game.totalPlayers = data.totalPlayers;
                 this.game.playersLeft = data.totalPlayers;
                 this.game.turn = data.turn;
+                this.game.usernames = this.usernames;
                 this.turn = data.turn;
                 var playerTurn = document.querySelector("#playerTurn") as HTMLElement;
                 playerTurn.textContent = `${this.usernames[this.turn-1][0]}`;

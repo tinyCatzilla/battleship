@@ -194,6 +194,10 @@ table {
     background-size: cover;
 }
 
+.sunk{
+    border: 2px solid red;
+}
+
 .lobbyScreen {
     display: none;
     flex-grow: 1;
@@ -314,6 +318,11 @@ table {
 .activeBoard {
     /* background:yellow; */
 }
+
+.defeated-Board{
+    opacity: 0.5;
+}
+
 .board-small {
     float: left;
     margin-left: 10px;
@@ -322,4 +331,20 @@ table {
 
 .chat {
     background-color: var(--board-bg);
+}
+
+.win-screen {
+    /* Example styles */
+    width: 100%;
+    height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background: #fafafa;
+}
+
+.winner-alert {
+    /* Example styles */
+    font-size: 2em;
+    text-align: center;
 }
