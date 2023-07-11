@@ -405,11 +405,17 @@ export class Board {
         // creates an empty board in boardgrid
         const boardDiv = document.querySelector(".boardGrid");
         if (!boardDiv) return;
+
+        // Create bounding div
+        const boardContainer = document.createElement('div');
+        boardContainer.className = 'board-container';
+
+
         // Create an HTML element for the username and append it above the board
         var usernameDiv = document.createElement('div');
         usernameDiv.className = 'username';
         usernameDiv.textContent = username;
-        boardDiv.appendChild(usernameDiv);
+        boardContainer.appendChild(usernameDiv);
         // Render the board as an HTML table
         const boardElement = document.createElement('table');
         this.shipBoard.forEach((row, i) => {
@@ -435,15 +441,16 @@ export class Board {
             boardElement.classList.add('board-small');
             boardElement.id = `small-board-${playerNumber}`;
         });
-        boardDiv.appendChild(boardElement); // Add the board to the DOM
+        boardContainer.appendChild(boardElement); // Add the board to the DOM
+        boardDiv.appendChild(boardContainer);
     }
 
     rendersmallplayer(playerNumber: number, username: string) {
         const boardDiv = document.querySelector(".playerBoard");
         if (!boardDiv) return;
-        var usernameDiv = document.createElement('div');
-        usernameDiv.className = 'username';
-        usernameDiv.textContent = username;
+        var usernameDiv = document.createElement('span');
+        usernameDiv.className = 'username leftName';
+        usernameDiv.textContent = "You: " + username;
         boardDiv.appendChild(usernameDiv);
         // Render the board as an HTML table
         const boardElement = document.createElement('table');
@@ -475,9 +482,9 @@ export class Board {
     renderattacker(playerNumber: number, username: string) {
         const boardDiv = document.querySelector(".attackerBoard");
         if (!boardDiv) return;
-        var usernameDiv = document.createElement('div');
-        usernameDiv.className = 'username';
-        usernameDiv.textContent = username;
+        var usernameDiv = document.createElement('span');
+        usernameDiv.className = 'username leftName';
+        usernameDiv.textContent = "Current Attacker: " + username;
         boardDiv.appendChild(usernameDiv);
         // Render the board as an HTML table
         const boardElement = document.createElement('table');
@@ -506,13 +513,19 @@ export class Board {
         boardDiv.appendChild(boardElement); // Add the board to the DOM
     }
 
-    renderactive(playerNumber: number) {
+    renderactive(playerNumber: number, username: string) {
         const boardDiv = document.querySelector(".activeBoard");
         if (!boardDiv) return;
         // Remove all previous children
         while (boardDiv.firstChild) {
             boardDiv.firstChild.remove();
         }
+
+        var usernameDiv = document.createElement('div');
+        usernameDiv.className = 'username bigName';
+        usernameDiv.textContent = "Under Attack: " + username;
+        boardDiv.appendChild(usernameDiv);
+
         // Render the board as an HTML table
         const boardElement = document.createElement('table');
         this.shipBoard.forEach((row, i) => {

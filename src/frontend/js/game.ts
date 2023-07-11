@@ -101,7 +101,7 @@ export class Game {
     
         // Render the selected board on the active board
         const board = this.boards.get(selectedBoardId);
-        if (board) board.renderactive(selectedBoardId);
+        if (board) board.renderactive(selectedBoardId, this.usernames[selectedBoardId-1][0]);
 
         if (this.turn == this.myPlayerNumber) {
             const cells = document.querySelectorAll<HTMLTableCellElement>('.board-cell-active');
@@ -129,7 +129,7 @@ export class Game {
     
         // Hide the active board and show the small board
         if (activeBoard) activeBoard.style.display = "none";
-        if (boardGrid) boardGrid.style.display = "block";
+        if (boardGrid) boardGrid.style.display = "flex";
         if (backToGrid) backToGrid.style.display = "none";
     }
 

@@ -86,7 +86,7 @@ input[type=text] { flex-grow: 1; }
     transition: 0.3s ease-out;
 }
 
-.btnYellow {
+.btnYellow, .activeBoard  {
     color: var(--accent);
     background-color: var(--accent-clear);
     border: 2px solid var(--accent);
@@ -104,7 +104,7 @@ input[type=text] { flex-grow: 1; }
 .txtRed, .btnRed {
     color: var(--accent-red);
 }
-.btnRed {
+.btnRed, .attackerBoard {
     background-color: var(--accent-red-clear);
     border: 2px solid var(--accent-red);
 }
@@ -118,7 +118,7 @@ input[type=text] { flex-grow: 1; }
 .txtGreen, .btnGreen {
     color: var(--accent-green);
 }
-.btnGreen {
+.btnGreen, .playerBoard {
     background-color: var(--accent-green-clear);
     border: 2px solid var(--accent-green);
 }
@@ -314,7 +314,7 @@ table {
     /* background:red; */
     display: flex;
     flex-direction: column;
-    justify-content: center;
+    justify-content: space-evenly;
     align-items: center;
     border-radius: 7px 0 0 7px;
 }
@@ -326,6 +326,7 @@ table {
     /* background-color: #d3dce362; */
     margin: 0 20px 0 20px;
     border-radius: 0;
+    padding: 2rem;
 }
 #backToGrid {
     margin-top: 10px;
@@ -342,10 +343,7 @@ table {
 
 .boardGrid {
     width: 100%;
-}
-
-.activeBoard {
-    /* background:yellow; */
+    flex-wrap: wrap;
 }
 
 .defeated-Board{
@@ -354,8 +352,7 @@ table {
 
 .board-small {
     float: left;
-    margin-left: 10px;
-    margin-top: 10px;
+    margin-top: 6px;
 }
 
 .chat {
@@ -379,18 +376,41 @@ table {
     text-align: center;
 }
 
-.playerBoard {
-    height: 80%;
+.playerBoard, .attackerBoard {
+    /* height: 80%; */
     /* align to bottom */
     display: flex;
     flex-direction: column;
     justify-content: flex-end;
     align-items: center;
-    
-
+    padding: 5px;
+    border-radius: 5px;
 }
 
-.playerBoard table{
-    
+.leftName {
+    padding-bottom: 10px;
+    padding-top: 4px;
+}
 
+.username {
+    text-align: center;
+}
+
+.board-container {
+    margin-left: 30px;
+    margin-top: 30px;
+}
+
+.bigName {
+    font-size: var(--font-large);
+    margin-bottom: 20px;
+    margin-top: 5px;
+}
+
+
+.activeBoard {
+    /* background:yellow; */
+    color: var(--text-light)!important;
+    padding: 10px;
+    border-radius: 5px;
 }
