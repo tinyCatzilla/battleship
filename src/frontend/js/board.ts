@@ -401,6 +401,10 @@ export class Board {
         this.locked = true;
     }
 
+    unlockBoard() {
+        this.locked = false;
+    }
+
     rendersmall(playerNumber: number, username: string) {
         // creates an empty board in boardgrid
         const boardDiv = document.querySelector(".boardGrid");
@@ -542,6 +546,9 @@ export class Board {
                 }
                 if(this.sunkCells.has(cellId)) {
                     cellElement.classList.add('sunk');
+                }
+                if (this.shipBoard[i][j].hasShip) {
+                    cellElement.classList.add('ship');
                 }
                 cellElement.setAttribute('data-playerNumber', playerNumber.toString());
                 cellElement.classList.add('board-cell-active');

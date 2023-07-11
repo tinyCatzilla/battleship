@@ -49,6 +49,11 @@ wss.on('connection', (ws: WS) => {
                         const game = games.get(data.gameId);
                         const usernames = service.usernames.get(data.gameId);
                         console.log(service.usernames.get(data.gameId));
+                        if (joinResult.status === 'error') {
+                            // The fire function could not be executed successfully. Respond accordingly.
+                            ws.send(JSON.stringify({ type: 'error', message: joinResult.message }));
+                            console.log('sent error to client');
+                        }
                         ws.send(JSON.stringify({ type: 'joinGame', success: joinResult.success, playerNumber: joinResult.playerNumber, game: game}));
                         if (joinResult.success) {
                             addToGameClients(data.gameId, ws);
@@ -59,8 +64,22 @@ wss.on('connection', (ws: WS) => {
                         break;
                     case 'leaveGame':
                         const leaveResult = service.leaveGame(data.gameId, data.playerNumber);
-                        // Remove the client from the gameClients map
-                        ws.send(JSON.stringify({ type: 'leaveGame', success: leaveResult.success }));
+                        if (leaveResult.status === 'error') {
+                            // The fire function could not be executed successfully. Respond accordingly.
+                            ws.send(JSON.stringify({ type: 'error', message: leaveResult.message }));
+                            console.log('sent error to client');
+                        }
+                        if (leaveResult.totalPlayers === 0){
+                            gameClients.delete(data.gameId);
+                            games.delete(data.gameId);
+                        }
+                        else{
+                            removeFromGameClients(data.gameId, ws);
+                            removeFromGame(data.gameId, ws);
+                        }
+                        broadcast(data.gameId, { type: 'leaveGame', success: leaveResult.success, playerNumber: data.playerNumber });
+                        broadcast(data.gameId,{ type: 'usernameUpdate', usernames: leaveResult.usernames });
+                        broadcastToGame(data.gameId,{ type: 'leaveGame', success: leaveResult.success, playerNumber: data.playerNumber });
                         break;
                     case 'confirmPlacement':
                         const confirmPlacement = service.confirmPlacement(data.gameId, data.playerNumber, data.shipCells);
@@ -114,6 +133,18 @@ wss.on('connection', (ws: WS) => {
                     case 'backToGrid':
                         console.log('backToGrid data:', data);
                         broadcastToGame(data.gameId,{ type: 'backToGrid'});
+                        break;
+                    case 'chat':
+                        console.log('chat data:', data);
+                        broadcast(data.gameId,{ type: 'chat', username: data.username, message: data.message});
+                        break;
+                    case 'stop':
+                        console.log('stop data:', data);
+                        gameClients.delete(data.gameId);
+                        games.delete(data.gameId);
+                        service.games.delete(data.gameId);
+                        service.usernames.delete(data.gameId);
+                        break;
                 }
             }
         }
@@ -151,6 +182,16 @@ wss.on('connection', (ws: WS) => {
         console.log('Number of clients in game:', gameId, clients.length);
     }
 
+    function removeFromGameClients(gameId: string, client: WS) {
+        let clients = gameClients.get(gameId);
+        if (clients) {
+            clients = clients.filter(c => c !== client);
+            gameClients.set(gameId, clients);
+            console.log('Client removed from game:', gameId);
+        }
+        console.log('Number of clients in game:', gameId, clients?.length);
+    }
+
     function broadcastToGame(gameId: string, message: any) {
         const clients = games.get(gameId) || [];
         console.log('Broadcasting to game:', gameId, 'Number of clients:', clients.length);
@@ -173,6 +214,16 @@ wss.on('connection', (ws: WS) => {
             console.log('Client added to game:', gameId);
         }
         console.log('Number of clients in game:', gameId, game.length);
+    }
+
+    function removeFromGame(gameId: string, client: WS) {
+        let game = games.get(gameId);
+        if (game) {
+            game = game.filter(c => c !== client);
+            games.set(gameId, game);
+            console.log('Client removed from game:', gameId);
+        }
+        console.log('Number of clients in game:', gameId, game?.length);
     }
 });
 

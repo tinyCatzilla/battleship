@@ -10,6 +10,7 @@ class GameClient {
     usernames: string[];
     private playerBoard: Board;
     turn: number;
+    started: boolean;
 
     constructor() {
         this.socket = new WebSocket("ws://localhost:3050");
@@ -20,6 +21,7 @@ class GameClient {
         this.usernames = [];
         this.playerBoard = new Board();
         this.turn = -1;
+        this.started = false;
 
         this.socket.onmessage = (event) => {
             const data = JSON.parse(event.data);
@@ -36,21 +38,11 @@ class GameClient {
                     lobbyCode.textContent = `${this.gameId}`;
                 } else {
                     // Handle the case where joining the game was not successful
-                    alert("Failed to join the game.");
+                    alert("Failed to join the game, game already started.");
                 }
             }
             else if (data.type === 'leaveGame') {
-                if (data.success === true) {
-                    history.pushState({}, '', `/`);
-                    this.gameId = "";
-                    this.playerNumber = -1;
-                    this.unrender();
-                    this.game = new Game(this.gameId, this.playerNumber);
-                    this.displayTitleScreen();
-                } else {
-                    // Handle the case where leaving the game was not successful
-                    alert("Failed to leave the game.");
-                }
+                this.handleLeaveGame(data);
             }
             else if (data.type === 'confirmPlacement') {
                 this.handleConfirmPlacement(data);
@@ -62,13 +54,25 @@ class GameClient {
                 this.game.playersLeft = data.totalPlayers;
                 this.game.turn = data.turn;
                 this.game.usernames = this.usernames;
+                this.started = true;
+                this.game.started = true;
                 this.turn = data.turn;
-                this.game.startGame();
+                this.game.startGame(this.playerBoard);
                 console.log('all players ready, starting game');
             }
             else if (data.type === 'nextturn'){
                 console.log('nextturn received');
                 this.turn = data.opponentNumber;
+            }
+            else if (data.type === 'chat'){
+                console.log('chat received');
+                let chatDiv = document.querySelector(".chat");
+                let messageElement = document.createElement("p");
+                messageElement.textContent = data.username + ": " + data.message;
+                if (chatDiv) chatDiv.appendChild(messageElement);
+            }
+            else if (data.type === 'error'){
+                alert(data.message);
             }
         };
     }
@@ -77,6 +81,30 @@ class GameClient {
         this.usernames = data.usernames;
         console.log('usernames:', this.usernames);
         this.updateUsers();
+    }
+
+    handleLeaveGame(data: any) {
+        if (data.playerLeft === this.playerNumber){
+            if (data.success === true) {
+                history.pushState({}, '', `/`);
+                this.gameId = "";
+                this.playerNumber = -1;
+                this.unrender();
+                this.game = new Game(this.gameId, this.playerNumber);
+                this.displayTitleScreen();
+                this.unlockConfirmPlacementButton();
+                this.playerBoard.unlockBoard();
+            } else {
+                // Handle the case where leaving the game was not successful
+                alert("Failed to leave the game.");
+            }
+        }
+        else {
+            if (data.playerLeft < this.playerNumber && data.success === true && this.started === false) {
+                this.playerNumber -= 1;
+                this.game.myPlayerNumber -= 1;
+            }
+        }
     }
 
     handleConfirmPlacement(data: any) {
@@ -128,9 +156,7 @@ class GameClient {
     
     leaveRoom() {
          // Send the leave room request to the server
-        this.socket.send(JSON.stringify({ type: 'leaveGame', data: {gameId: this.gameId} }));
-        this.unlockConfirmPlacementButton();
-            // TODO IMPORTANT: PLAYER 1 LEAVING GAME
+        this.socket.send(JSON.stringify({ type: 'leaveGame', data: {gameId: this.gameId, playerNumber: this.playerNumber} }))
     }
 
     render() {
@@ -161,6 +187,10 @@ class GameClient {
             }
             playerListDiv.appendChild(playerDiv);
         }
+    }
+
+    sendMessage(message: string) {
+        this.socket.send(JSON.stringify({type: 'chat', data: {gameId: this.gameId, username: this.username, message: message}}));
     }
 
     confirmPlacement() {
@@ -234,5 +264,15 @@ export function initializeApp() {
     const confirmButton = document.querySelector("#readyButton");
     if (confirmButton) {
         confirmButton.addEventListener("click", () => gameClient.confirmPlacement());
+    }
+
+    const chatInput = document.querySelector<HTMLInputElement>("#chatInput");
+    if (chatInput) {
+        chatInput.addEventListener("keypress", (event: KeyboardEvent) => {
+            if (event.key === "Enter") {
+                gameClient.sendMessage(chatInput.value);
+                chatInput.value = ""; // Clear the input field
+            }
+        });
     }
 }

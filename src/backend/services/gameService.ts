@@ -34,16 +34,21 @@ export class GameService {
             game.boards.push(newplayer.board); 
             if (!this.usernames.has(gameId)) {
                 console.log('fatal error: usernames map does not have gameId key')
+                return{
+                    status: 'error',
+                    message: 'usernames map does not have gameId key'
+                }
             }
-        this.usernames.get(gameId)!.push([username, 'notReady']);
+            this.usernames.get(gameId)!.push([username, 'notReady']);
+            if (game.started === true) return {success: false, playerNumber: -1}
             return {
                 success: true,
                 playerNumber: game.totalPlayers
             }
         }
-        return {
-            success: false,
-            playerNumber: -1
+        return{
+            status: 'error',
+            message: 'Game not found'
         }
     }
     
@@ -51,18 +56,39 @@ export class GameService {
     leaveGame(gameId: string, playerNumber: number){
         const game = this.games.get(gameId);
         if (game) {
-            game.totalPlayers -= 1;
-            game.boards.splice(playerNumber, 1);
-            return{
-                success: true,
-                playerNumber: game.totalPlayers
+            // Get array of usernames for this game
+            let usernamesArray = this.usernames.get(gameId);
+
+            if (game.started === false) {
+                // Decrement total number of players
+                game.totalPlayers -= 1;
+                if (usernamesArray) {
+                    // Remove the leaving player's username
+                    usernamesArray.splice(playerNumber, 1);
+    
+                    // Store back the updated array of usernames in the Map
+                    this.usernames.set(gameId, usernamesArray);
+                }
+
+                if (game.totalPlayers === 0) {
+                    this.games.delete(gameId);
+                    this.usernames.delete(gameId);
+                }
             }
+    
+            return {
+                success: true,
+                playerNumber: game.totalPlayers,
+                usernames: usernamesArray,
+                totalPlayers: game.totalPlayers
+            };
         }
-        return{
-            success: false,
-            playerNumber: -1
-        }
+        return {
+            status: 'error',
+            message: 'Game not found'
+        };
     }
+    
 
     confirmPlacement(
         gameId: string,
@@ -97,7 +123,9 @@ export class GameService {
     startGame(gameId: string) {
         const game = this.games.get(gameId);
         if (!game) { return { status: 'error', message: 'Game not found' };  }
+        game.choosePlayerTurn();
         var turn = game.playerTurn;
+        game.started = true;
         return {turn: turn};
     }
 

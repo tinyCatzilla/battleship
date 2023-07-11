@@ -34,6 +34,7 @@ export class Game {
     playersReady: number;
     playerTurn: number;
     allshipCells: Map<number, { row: number, column: number, shipId: number }[]>;
+    started: boolean;
 
 
     constructor(gameId: string) {
@@ -45,8 +46,9 @@ export class Game {
         // note that player0 isnt real.
         this.remaining = [];
         this.playersReady = 0;
-        this.playerTurn = Math.floor(Math.random() * this.totalPlayers)+1;
+        this.playerTurn = 0;
         this.allshipCells = new Map();
+        this.started = false;
     }
 
     placeShips(playerNumber: number, shipCells: { row: number, column: number, shipId: number }[] = []) {
@@ -90,6 +92,10 @@ export class Game {
     isGameOver(playerNumber: number) {
         // The game is over if all ships are sunk (i.e., their remaining size is 0)
         return this.remaining[playerNumber].every(size => size === 0);
+    }
+
+    choosePlayerTurn() {
+        this.playerTurn = Math.ceil(Math.random() * this.totalPlayers)
     }
     
 }
