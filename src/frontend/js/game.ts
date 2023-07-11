@@ -68,6 +68,7 @@ export class Game {
         const cells = document.querySelectorAll<HTMLTableCellElement>('.board-small');
         cells.forEach((cell) => {
             cell.addEventListener('click', this.onSmallBoardClick);
+            cell.style.cursor = "pointer";
         });
 
         const backToGrid = document.querySelector("#backToGrid") as HTMLElement; 
@@ -253,18 +254,52 @@ export class Game {
         console.log("Game has been stopped.");
     
         // Hide the game screen
-        const gameScreen = document.querySelector(".game-screen") as HTMLElement;
+        const gameScreen = document.querySelector(".gameScreen") as HTMLElement;
         if (gameScreen) gameScreen.style.display = 'none';
     
-        // Create a win screen
-        const winScreen = document.createElement('div');
-        winScreen.classList.add('win-screen');
+        // // Create a win screen
+        // const winScreen = document.createElement('div');
+        // winScreen.classList.add('win-screen');
     
-        const winnerAlert = document.createElement('h1');
+        // const winnerAlert = document.createElement('h1');
+        // winnerAlert.classList.add('winner-alert');
+        // winnerAlert.textContent = `Congratulations! Player ${winner} has won!`;
+    
+        // winScreen.appendChild(winnerAlert);
+        // document.body.appendChild(winScreen);
+
+
+        const subHeadings = [
+            "Congratulations!",
+            "You sunk my battleship",
+            "GGs",
+            "Go next?",
+            "Winner alert!",
+            "Or did they?"
+        ]
+
+        const winScreen = document.querySelector(".winScreen") as HTMLElement;
+        if (winScreen) winScreen.style.display = 'flex';
+
+        const winnerAlert = document.createElement('div');
         winnerAlert.classList.add('winner-alert');
-        winnerAlert.textContent = `Congratulations! Player ${winner} has won!`;
-    
+        winnerAlert.textContent = `Player ${winner} has won!`;
         winScreen.appendChild(winnerAlert);
-        document.body.appendChild(winScreen);
+
+        const subHeading = document.createElement('div');
+        subHeading.classList.add('sub-heading');
+        subHeading.textContent = subHeadings[Math.floor(Math.random() * subHeadings.length)];
+        winScreen.appendChild(subHeading);
+
+
+        const playAgain = document.createElement('button');
+        playAgain.classList.add('menuButton');
+        playAgain.classList.add('btnGreen');
+        playAgain.textContent = `Play Again`; // TODO: Change "Play Again" to go back to lobby?
+        playAgain.addEventListener('click', () => {
+            location.reload();
+        });
+        winScreen.appendChild(playAgain);
+        
     }
 }
