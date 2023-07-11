@@ -583,13 +583,13 @@ export class Board {
         }
 
         // For the attacker board
-        const attackerCell = document.querySelector(`.attackerBoard [data-row="${row}"][data-column="${column}"]`);
-        if (attackerCell) {
-            attackerCell.classList.add(cellClass);
-            if (isSunk) {
-                attackerCell.classList.add('sunk');
-            }
-        }
+        // const attackerCell = document.querySelector(`.attackerBoard [data-row="${row}"][data-column="${column}"]`);
+        // if (attackerCell) {
+        //     attackerCell.classList.add(cellClass);
+        //     if (isSunk) {
+        //         attackerCell.classList.add('sunk');
+        //     }
+        // }
       }
     
 

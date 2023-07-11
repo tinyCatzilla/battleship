@@ -187,7 +187,7 @@ export class Game {
                     // Mark all the cells of the sunk ship as sunk
                     data.sunkShipCells.forEach((cell: {row: number, column: number}) => {
                         const sunkCellId = `${cell.row}-${cell.column}`;
-                        opponentBoard.hitCells.add(sunkCellId);
+                        opponentBoard.sunkCells.add(sunkCellId);
                         opponentBoard.updateCellDisplay(cell.row, cell.column, data.hit, true, data.opponentNumber);
                     
                         // Calculate the IDs of the orthogonal cells
