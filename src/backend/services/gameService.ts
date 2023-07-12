@@ -29,9 +29,6 @@ export class GameService {
     joinGame(gameId: string, username: string){
         const game = this.games.get(gameId);
         if (game) {
-            game.totalPlayers += 1;
-            var newplayer = new Board();
-            game.boards.push(newplayer.board); 
             if (!this.usernames.has(gameId)) {
                 console.log('fatal error: usernames map does not have gameId key')
                 return{
@@ -39,8 +36,11 @@ export class GameService {
                     message: 'usernames map does not have gameId key'
                 }
             }
-            this.usernames.get(gameId)!.push([username, 'notReady']);
             if (game.started === true) return {success: false, playerNumber: -1}
+            game.totalPlayers += 1;
+            var newplayer = new Board();
+            game.boards.push(newplayer.board); 
+            this.usernames.get(gameId)!.push([username, 'notReady']);
             return {
                 success: true,
                 playerNumber: game.totalPlayers
@@ -53,18 +53,19 @@ export class GameService {
     }
     
 
-    leaveGame(gameId: string, playerNumber: number){
+    leaveGame(gameId: string, playerNumber: number, isReady: string){
         const game = this.games.get(gameId);
         if (game) {
             // Get array of usernames for this game
             let usernamesArray = this.usernames.get(gameId);
+            game.totalPlayers -= 1;
 
             if (game.started === false) {
                 // Decrement total number of players
-                game.totalPlayers -= 1;
+                if (isReady === 'Ready') game.playersReady -= 1;
                 if (usernamesArray) {
                     // Remove the leaving player's username
-                    usernamesArray.splice(playerNumber, 1);
+                    usernamesArray.splice(playerNumber-1, 1);
     
                     // Store back the updated array of usernames in the Map
                     this.usernames.set(gameId, usernamesArray);
@@ -78,9 +79,10 @@ export class GameService {
     
             return {
                 success: true,
-                playerNumber: game.totalPlayers,
+                playerNumber: playerNumber,
                 usernames: usernamesArray,
-                totalPlayers: game.totalPlayers
+                totalPlayers: game.totalPlayers,
+                started: game.started
             };
         }
         return {
@@ -101,6 +103,7 @@ export class GameService {
             var gameUsernames = this.usernames.get(gameId);
             gameUsernames![playerNumber - 1][1] = 'ready';
             game.placeShips(playerNumber, shipCells);
+            console.log(game.playersReady, game.totalPlayers, game.started)
             if (game.playersReady === game.totalPlayers && game.totalPlayers > 1) {
                 game.playerTurn = 1;
                 return {start: true, usernames: gameUsernames};
@@ -126,6 +129,7 @@ export class GameService {
         game.choosePlayerTurn();
         var turn = game.playerTurn;
         game.started = true;
+        console.log(game?.started);
         return {turn: turn};
     }
 
