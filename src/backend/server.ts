@@ -4,6 +4,7 @@ import { GameService } from './services/gameService.js';
 import http from 'http';
 import { WebSocketServer } from 'ws';
 import WS from 'ws';
+import { join } from 'path';
 
 // Initialize express app
 const app = express();
@@ -43,6 +44,10 @@ wss.on('connection', (ws: WS) => {
                         ws.send(JSON.stringify({ type: 'usernameUpdate', usernames: service.usernames.get(data.gameId) }));
                         console.log('username update', data.gameId);
                         console.log('Game created:', data.gameId);
+
+                        const usernameStarted = service.usernames.get(data.gameId)![0][0];
+                        broadcast(data.gameId,{ type: 'chatAlert', color: "txtYellow", message: usernameStarted + " joined the game." });
+
                         break;
                     case 'joinGame':
                         const joinResult = service.joinGame(data.gameId, data.username);
@@ -60,9 +65,18 @@ wss.on('connection', (ws: WS) => {
                         }
                         broadcast(data.gameId,{ type: 'usernameUpdate', usernames: usernames });
                         console.log('username update', data.gameId);
+
+                        if (usernames) {
+                            let usernameJoined = usernames[joinResult.playerNumber! - 1][0];
+                            broadcast(data.gameId,{ type: 'chatAlert', color: "txtYellow", message: usernameJoined + " has joined the game." });
+                        }
                         break;
                     case 'leaveGame':
                         console.log('leaveGame data:', data);
+
+                        const usernameLeft = service.usernames.get(data.gameId)![data.playerNumber - 1][0];
+                        broadcast(data.gameId,{ type: 'chatAlert', color: "txtRed", message: usernameLeft + " has left the game." });
+
                         const leaveResult = service.leaveGame(data.gameId, data.playerNumber, data.isReady);
                         if (leaveResult.status === 'error') {
                             // The fire function could not be executed successfully. Respond accordingly.
@@ -73,6 +87,7 @@ wss.on('connection', (ws: WS) => {
                         console.log('leaveGame result:', leaveResult);
                         broadcast(data.gameId, { type: 'leaveGame', success: leaveResult.success, playerNumber: data.playerNumber });
                         broadcast(data.gameId,{ type: 'usernameUpdate', usernames: leaveResult.usernames });
+
                         if (leaveResult.started){
                             console.log('broadcast leaveGame to game:', data.gameId)
                             broadcastToGame(data.gameId,{ type: 'leaveGame', success: leaveResult.success, playerNumber: data.playerNumber });
@@ -104,6 +119,11 @@ wss.on('connection', (ws: WS) => {
                             console.log('startGame for client in', data.gameId);
                         }
                         console.log('confirmPlacement', data.gameId);
+
+
+                        const usernameReady = service.usernames.get(data.gameId)![data.playerNumber - 1][0];
+                        broadcast(data.gameId,{ type: 'chatAlert', color: "txtGreen", message: usernameReady + " is ready." });
+
                         break;
                     case 'initGame':
                         addToGame(data.gameId, ws);
@@ -133,6 +153,20 @@ wss.on('connection', (ws: WS) => {
                                 broadcast(data.gameId,{ type: 'nextturn', opponentNumber: data.opponentNumber});
                             }
                             console.log('fire broadcasted to game:', data.gameId);
+
+                            const attackerUsername = service.usernames.get(data.gameId)![data.playerNumber - 1][0];
+                            const defenderUsername = service.usernames.get(data.gameId)![data.opponentNumber - 1][0];
+                            let hit;
+                            if (fireResult.sunk === true){
+                                hit = " sunk ";
+                            }
+                            else if (fireResult.hit === true){
+                                hit = " hit ";
+                            } 
+                            else {
+                                hit = " missed ";
+                            }
+                            broadcast(data.gameId,{ type: 'chatAlert', color: "txtYellow", message: attackerUsername + hit + defenderUsername + "'s ship!" });
                         }
                         break;
                     case 'selectBoard':

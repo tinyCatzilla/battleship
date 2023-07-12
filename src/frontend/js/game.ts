@@ -335,13 +335,14 @@ export class Game {
         const chats = document.querySelectorAll(".chat");
         for (let chat of chats) {
             if (chat.parentElement?.classList.contains("lobbyMain")) { // if chat's parent is lobbyMain, get children
-                for (let child of chat.children) {
+                const chatMessages = chat.querySelectorAll(".chatMessages");
+                for (let child of chatMessages) {
                     if (child.classList.contains("chatMessage")) {
                         chat.removeChild(child);
                     }
                 }
             }
-            else { // delete chat
+            else { // delete chat if it's not lobby chat
                 chat.parentElement?.removeChild(chat);
             }
         }

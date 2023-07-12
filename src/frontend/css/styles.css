@@ -15,7 +15,7 @@
     --text-main: #1f1f1f;
     --text-secondary: rgb(110, 110, 110);
     --text-light: #e4edf3;
-    --text-light-secondary: #d3dce3;
+    --text-light-secondary: #a4b2be;
 
     --font-main: 1.2rem;
     --font-large: 1.7rem;
@@ -44,6 +44,8 @@ body {
     flex-grow: 1;
     display:flex;
 /*     padding-top: 50px; */
+    /*! height: 50vh; */
+    /*! overflow: hidden; */
 }
 
 .titleScreen {
@@ -90,8 +92,10 @@ input[type=text] { flex-grow: 1; }
     transition: 0.3s ease-out;
 }
 
-.btnYellow, .activeBoard  {
+.txtYellow, .btnYellow, .activeBoard {
     color: var(--accent);
+}
+.btnYellow, .activeBoard  {
     background-color: var(--accent-clear);
     border: 2px solid var(--accent);
 }
@@ -243,6 +247,7 @@ table {
 .lobbyScreen {
     display: none;
     flex-grow: 1;
+    /*! height: 50vh; */
 }
 
 #leaveRoomButton {
@@ -266,6 +271,7 @@ table {
     grid-template-columns: 1fr 3fr 1fr;
     flex-grow: 1;
     padding: 0px 0 20px 0;
+    height: 90vh;
 }
 
 .leftSide {
@@ -326,9 +332,10 @@ table {
 }
 .gameMain {
     display: grid;
-    grid-template-columns: 1fr 3fr 1fr;
+    grid-template-columns: minmax(300px, 1fr) minmax(300px, 3fr) minmax(300px, 1fr);
     flex-grow: 1;
     padding: 0px 0 20px 0;
+    height: 90vh;
 }
 .leftBoards, .rightBoards, .chat {
     border: 2px solid var(--accent);
@@ -382,10 +389,6 @@ table {
     margin-top: 6px;
 }
 
-.chat {
-/*     background-color: #e9c5332f; */
-    border-radius: 0 7px 7px 0;
-}
 
 
 .playerBoard, .attackerBoard {
@@ -440,14 +443,6 @@ table {
     width: 100%;
     height: 100%;
 }
-/* .win-screen {
-    width: 100%;
-    height: 100vh;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    background: #fafafa;
-} */
 
 .winner-alert {
     font-size: var(--font-huge);
@@ -460,4 +455,47 @@ table {
     text-align: center;
     color: var(--text-light-secondary);
     margin-bottom: 40px;
+}
+
+.chat {
+    /*     background-color: #e9c5332f; */
+    border-radius: 0 7px 7px 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    height: inherit;
+}
+#chatInput {
+    height: 40px;
+    margin: 0;
+    border-bottom: none!important;
+    border-left: none!important;
+    border-right: none!important;
+    border-radius: 0 0 10px 0!important;
+}
+.chatMessages {
+    height: 95%;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    overflow-y: hidden;
+    padding: 10px;
+    margin-bottom: 10px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.chatMessages p {
+    color: var(--text-light);
+}
+
+.chatMessage {
+    margin: 20px 0 0 0;
+    padding: 0;
+    word-wrap: break-word;
+}
+
+.chatName {
+    color: var(--text-light-secondary);
 }

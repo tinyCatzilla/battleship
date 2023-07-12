@@ -69,10 +69,31 @@ class GameClient {
                 console.log('chat received');
                 const chatDivs = document.querySelectorAll(".chat");
                 for (let chatDiv of chatDivs) {
+                    const messagesDiv = chatDiv.querySelector(".chatMessages");
+
+                    const nameSpan = document.createElement("span");
+                    nameSpan.classList.add("chatName");
+                    nameSpan.textContent = data.username + ": ";
+
                     let messageElement = document.createElement("p");
                     messageElement.classList.add("chatMessage");
-                    messageElement.textContent = data.username + ": " + data.message;
-                    if (chatDiv) chatDiv.appendChild(messageElement);
+                    messageElement.appendChild(nameSpan);
+                    messageElement.innerHTML += data.message;
+                    if (messagesDiv) messagesDiv.appendChild(messageElement);
+                }
+            }
+            else if (data.type === 'chatAlert') {
+                console.log('chat alert received');
+                const chatDivs = document.querySelectorAll(".chat");
+                for (let chatDiv of chatDivs) {
+                    const messagesDiv = chatDiv.querySelector(".chatMessages");
+
+                    let messageElement = document.createElement("span");
+                    messageElement.classList.add("chatMessage");
+                    messageElement.classList.add(data.color);
+                    messageElement.innerHTML += data.message;
+                    
+                    if (messagesDiv) messagesDiv.appendChild(messageElement);
                 }
             }
             else if (data.type === 'error'){
@@ -113,7 +134,8 @@ class GameClient {
                 const chats = document.querySelectorAll(".chat");
                 for (let chat of chats) {
                     if (chat.parentElement?.classList.contains("lobbyMain")) { // if chat's parent is lobbyMain, get children
-                        for (let child of chat.children) {
+                        const chatMessages = chat.querySelectorAll(".chatMessages");
+                        for (let child of chatMessages) {
                             if (child.classList.contains("chatMessage")) {
                                 chat.removeChild(child);
                             }
