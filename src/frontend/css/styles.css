@@ -242,6 +242,7 @@ table {
 .sunk {
     /* border: 2px solid red; */
     border: 2px solid var(--accent-red);
+    background-color: var(--accent-red-clear)!important;
 }
 
 .lobbyScreen {
@@ -498,4 +499,24 @@ table {
 
 .chatName {
     color: var(--text-light-secondary);
+}
+
+.two-alive {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-evenly;
+    align-items: center;
+    height: 100%;
+}
+
+.two-alive-header {
+    font-size: var(--font-huge);
+    color: var(--text-light);
+    margin-bottom: 20px;
+}
+
+.two-alive-text {
+    font-size: var(--font-large);
+    color: var(--text-light-secondary);
+    margin-bottom: 20px;
 }

@@ -30,6 +30,16 @@ export class Game {
                 case 'fire':
                     console.log(data);
                     console.log('fire received');
+                    if (data.gameOver) {
+                        this.socket.send(JSON.stringify({
+                            type: 'gameOver',
+                            data: {
+                                gameId: this.gameId,
+                                playerNumber: this.myPlayerNumber,
+                                opponentNumber: data.opponentNumber,
+                            }
+                        }));
+                    }
                     this.handleFireResponse(data);
                     break;
                 case 'selectBoard':
@@ -135,7 +145,8 @@ export class Game {
         // Show the active board and hide the small board
         if (activeBoard) activeBoard.style.display = "block";
         if (boardGrid) boardGrid.style.display = "none";
-        if (backToGrid && this.turn == this.myPlayerNumber && this.totalPlayers != 2) backToGrid.style.display = "block";
+        if (backToGrid && this.turn == this.myPlayerNumber && this.playersLeft != 2) backToGrid.style.display = "block";
+        else if (backToGrid) backToGrid.style.display = "none";
     
         // Render the selected board on the active board
         const board = this.boards.get(selectedBoardId);
@@ -201,6 +212,7 @@ export class Game {
     }
 
     handlePlayerLeft(data: any) {
+        if (data.playerNumber == this.myPlayerNumber) return;
         console.log('Player ' + data.playerNumber + ' left the game')
         this.playersLeft -= 1;
         this.alive[data.playerNumber-1] = false;
@@ -300,10 +312,36 @@ export class Game {
                     if (data.gameOver) {
                         console.log(`Player ${data.opponentNumber} has no ships left!`);
                         this.playersLeft -= 1;
-                        this.alive[data.opponentNumber-1] = false;
+                        this.alive[data.opponentNumber - 1] = false;
 
                         if (this.playersLeft === 2 ){
                             var alivePlayers = this.getTrueIndices(this.alive);
+
+                            const twoAliveDiv = document.createElement('div');
+                            twoAliveDiv.classList.add('two-alive');
+
+                            const twoAliveHeader = document.createElement('div');
+                            twoAliveHeader.classList.add('two-alive-header');
+                            twoAliveHeader.innerHTML = 'Two players left!';
+                            twoAliveDiv.appendChild(twoAliveHeader);
+
+                            const twoAliveText = document.createElement('div');
+                            twoAliveText.classList.add('two-alive-text');
+                            twoAliveText.innerHTML = this.usernames[alivePlayers[0]][0] + " VS " + this.usernames[alivePlayers[1]][0];
+                            twoAliveDiv.appendChild(twoAliveText);
+
+                            const rightBoards = document.querySelector('.rightBoards');
+                            if (rightBoards) rightBoards.appendChild(twoAliveDiv);
+                            
+                            setTimeout(() => { // wait 3s
+                                if (rightBoards) rightBoards.removeChild(twoAliveDiv);
+                            }, 3000);
+                            
+                            if (this.myPlayerNumber != alivePlayers[0]+1 && this.myPlayerNumber != alivePlayers[1] + 1){
+                                if (alivePlayers[0] + 1 === this.turn) this.renderSelectedBoard(alivePlayers[1] + 1);
+                                else this.renderSelectedBoard(alivePlayers[0]+1);
+                                return;
+                            }
                             if (alivePlayers.length != 2){
                                 console.log("Error: More than 2 players are alive.");
                                 return;
@@ -312,8 +350,8 @@ export class Game {
                             if (this.myPlayerNumber === alivePlayer){
                                 alivePlayer = alivePlayers[1]+1;
                             }
+
                             this.clearBoardGrid();
-                            this.clearAttackerBoard();
                             this.renderSelectedBoard(alivePlayer);
                             return;
                         }
@@ -345,6 +383,11 @@ export class Game {
                 }
                 if (this.playersLeft === 2 ){
                     var alivePlayers = this.getTrueIndices(this.alive);
+                    if (this.myPlayerNumber != alivePlayers[0]+1 && this.myPlayerNumber != alivePlayers[1]+1){
+                        if (alivePlayers[0]+1 === this.turn) this.renderSelectedBoard(alivePlayers[1]+1);
+                        else this.renderSelectedBoard(alivePlayers[0]+1);
+                        return;
+                    }
                     if (alivePlayers.length != 2){
                         console.log("Error: More than 2 players are alive.");
                         return;
@@ -353,8 +396,6 @@ export class Game {
                     if (alivePlayer == this.myPlayerNumber){
                         alivePlayer = alivePlayers[1]+1;
                     }
-                    this.clearBoardGrid();
-                    this.clearAttackerBoard();
                     this.renderSelectedBoard(alivePlayer);
                 }
                 else {
@@ -391,12 +432,12 @@ export class Game {
 
         const chats = document.querySelectorAll(".chat");
         for (let chat of chats) {
-            if (chat.parentElement?.classList.contains("lobbyMain")) { // if chat's parent is lobbyMain, get children
+            if (chat.parentElement?.classList.contains("lobbyMain")) { // if chat's parent is lobbyMain, get chatMessages div
                 const chatMessages = chat.querySelectorAll(".chatMessages");
                 for (let child of chatMessages) {
-                    if (child.classList.contains("chatMessage")) {
+                    // if (child.classList.contains("chatMessage")) {
                         chat.removeChild(child);
-                    }
+                    // }
                 }
             }
             else { // delete chat if it's not lobby chat

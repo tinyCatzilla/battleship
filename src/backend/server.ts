@@ -84,13 +84,12 @@ wss.on('connection', (ws: WS) => {
                             break;
                         }
                         console.log('leaveGame result:', leaveResult);
-                        broadcast(data.gameId, { type: 'leaveGame', success: leaveResult.success, playerNumber: data.playerNumber });
-                        broadcast(data.gameId,{ type: 'usernameUpdate', usernames: leaveResult.usernames });
-
                         if (leaveResult.started){
                             console.log('broadcast leaveGame to game:', data.gameId)
                             broadcastToGame(data.gameId,{ type: 'leaveGame', success: leaveResult.success, playerNumber: data.playerNumber });
                         } 
+                        broadcast(data.gameId, { type: 'leaveGame', success: leaveResult.success, playerNumber: data.playerNumber });
+                        broadcast(data.gameId,{ type: 'usernameUpdate', usernames: leaveResult.usernames });
                         if (leaveResult.totalPlayers != 0){
                             console.log('Left game:', data.gameId);
                             removeFromGameClients(data.gameId, ws);
@@ -183,17 +182,16 @@ wss.on('connection', (ws: WS) => {
                     case 'stop':
                         console.log('stopping game:', data);
                         break;
+                    case 'gameOver':
+                        console.log('gameOver data:', data);
+                        const opponentUsername = service.usernames.get(data.gameId)![data.opponentNumber - 1][0];
+                        broadcast(data.gameId,{ type: 'chatAlert', color: "txtYellow", message: opponentUsername + " has no ships left!" });
+                        break;
                 }
             }
         }
     });
     ws.on('close', () => {
-        if (currentGameId) {
-            const clients = gameClients.get(currentGameId);
-            if (clients) {
-                gameClients.set(currentGameId, clients.filter(client => client !== ws));
-            }
-        }
     });
 
     function broadcast(gameId: string, message: any) {

@@ -133,12 +133,12 @@ class GameClient {
 
                 const chats = document.querySelectorAll(".chat");
                 for (let chat of chats) {
-                    if (chat.parentElement?.classList.contains("lobbyMain")) { // if chat's parent is lobbyMain, get children
+                    if (chat.parentElement?.classList.contains("lobbyMain")) { // if chat's parent is lobbyMain, get chatMessages div
                         const chatMessages = chat.querySelectorAll(".chatMessages");
                         for (let child of chatMessages) {
-                            if (child.classList.contains("chatMessage")) {
+                            // if (child.classList.contains("chatMessage")) {
                                 chat.removeChild(child);
-                            }
+                            // }
                         }
                     }
                     else { // delete chat if it's not lobby chat
@@ -218,6 +218,7 @@ class GameClient {
         console.log(this.playerNumber)
         this.socket.send(JSON.stringify({ type: 'leaveGame', data: {gameId: this.gameId, playerNumber: this.playerNumber, isReady: this.usernames[this.playerNumber-1][1]} }))
     }
+
 
     render() {
         this.playerBoard.render();
@@ -373,4 +374,15 @@ export function initializeApp() {
             }
         });
     }
+
+    window.addEventListener("beforeunload", function (e) {
+        console.log("beforeunload window :(");
+        e.preventDefault();
+        return 'please Leave any games before going - it may cause issues for the other players :(';
+    });
+    
+    window.addEventListener("unload", function (e) {
+        console.log("unloading window :(");
+        if (gameClient.gameId != "") gameClient.leaveRoom();
+    });
 }
