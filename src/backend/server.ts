@@ -1,10 +1,9 @@
 import express, { Request, Response } from 'express';
-import gameRoutes from './routes/gameRoutes.js';
-import { GameService } from './services/gameService.js';
+import gameRoutes from './gameRoutes.js';
+import { GameService } from './gameService.js';
 import http from 'http';
 import { WebSocketServer } from 'ws';
 import WS from 'ws';
-import { join } from 'path';
 
 // Initialize express app
 const app = express();

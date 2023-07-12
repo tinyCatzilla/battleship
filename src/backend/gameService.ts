@@ -1,9 +1,7 @@
 // src/backend/services/gameService.ts
 
-import { get } from 'http';
-import {Game} from '../models/game.js';
-import {Board} from '../models/game.js';
-import {Cell} from '../models/game.js';
+import {Game} from './game.js';
+import {Board} from './game.js';
 
 export class GameService {
     games: Map<string, Game>;

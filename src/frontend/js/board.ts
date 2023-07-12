@@ -601,40 +601,7 @@ export class Board {
                 playerCell.classList.add('sunk');
             }
         }
-
-        // For the attacker board
-        // const attackerCell = document.querySelector(`.attackerBoard [data-row="${row}"][data-column="${column}"]`);
-        // if (attackerCell) {
-        //     attackerCell.classList.add(cellClass);
-        //     if (isSunk) {
-        //         attackerCell.classList.add('sunk');
-        //     }
-        // }
-      }
-    
-
-    // hitCell(cell: { row: number, column: number, shipId: number }) {
-    //     const htmlcells = document.querySelectorAll<HTMLTableCellElement>('.board-cell');
-    //     const htmlcell = htmlcells[cell.row * 8 + cell.column];
-    //     htmlcell.classList.add('hit');
-    // }
-
-    // missCell(cell: { row: number, column: number, shipId: number }) {
-    //     const htmlcells = document.querySelectorAll<HTMLTableCellElement>('.board-cell');
-    //     const htmlcell = htmlcells[cell.row * 8 + cell.column];
-    //     htmlcell.classList.add('miss');
-    // }
-
-    // sinkShip(cell: { row: number, column: number, shipId: number }) {
-    //     const htmlcells = document.querySelectorAll<HTMLTableCellElement>('.board-cell');
-    //     const htmlcell = htmlcells[cell.row * 8 + cell.column];
-    //     htmlcell.classList.add('sunk');
-    // }
-
-    // gameOver() {
-    //     this.gameIsOver = true;
-    //     // render game over screen?
-    // }
+    }
 }
 
 

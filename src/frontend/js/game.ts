@@ -81,8 +81,23 @@ export class Game {
             }
         }
         this.socket.send(JSON.stringify({type: 'initGame', data:{gameId: this.gameId}}));
-        this.smallEventListeners();
-        this.showGrid();
+        // check for 2 player game
+        if (this.totalPlayers == 2) {
+            var alivePlayers = this.getTrueIndices(this.alive);
+            if (alivePlayers.length != 2){
+                console.log("Error: More than 2 players are alive.");
+                return;
+            }
+            var alivePlayer = alivePlayers[0]+1;
+            if (alivePlayer == this.myPlayerNumber){
+                alivePlayer = alivePlayers[1]+1;
+            }
+            this.renderSelectedBoard(alivePlayer);
+        }
+        else {
+            this.smallEventListeners();
+            this.showGrid();
+        }
     }
 
     smallEventListeners() {
@@ -120,7 +135,7 @@ export class Game {
         // Show the active board and hide the small board
         if (activeBoard) activeBoard.style.display = "block";
         if (boardGrid) boardGrid.style.display = "none";
-        if (backToGrid && this.turn == this.myPlayerNumber) backToGrid.style.display = "block";
+        if (backToGrid && this.turn == this.myPlayerNumber && this.totalPlayers != 2) backToGrid.style.display = "block";
     
         // Render the selected board on the active board
         const board = this.boards.get(selectedBoardId);
@@ -174,6 +189,17 @@ export class Game {
         }
     }
 
+    getTrueIndices(alive: boolean[]): number[] {
+        const trueIndices: number[] = [];
+      
+        for (let i = 0; i < alive.length; i++) {
+            if (alive[i]) {
+                trueIndices.push(i);
+            }
+        }
+        return trueIndices;
+    }
+
     handlePlayerLeft(data: any) {
         console.log('Player ' + data.playerNumber + ' left the game')
         this.playersLeft -= 1;
@@ -203,9 +229,8 @@ export class Game {
             }
             this.smallEventListeners();
         }
-
         this.showGrid();
-
+        
         const smallBoard = document.querySelector(`#small-board-${data.playerNumber}`);
         if(smallBoard) {
             const clone = smallBoard.cloneNode(true) as HTMLElement;
@@ -274,21 +299,33 @@ export class Game {
                     });
                     if (data.gameOver) {
                         console.log(`Player ${data.opponentNumber} has no ships left!`);
+                        this.playersLeft -= 1;
+                        this.alive[data.opponentNumber-1] = false;
+
+                        if (this.playersLeft === 2 ){
+                            var alivePlayers = this.getTrueIndices(this.alive);
+                            if (alivePlayers.length != 2){
+                                console.log("Error: More than 2 players are alive.");
+                                return;
+                            }
+                            var alivePlayer = alivePlayers[0]+1;
+                            if (this.myPlayerNumber === alivePlayer){
+                                alivePlayer = alivePlayers[1]+1;
+                            }
+                            this.clearBoardGrid();
+                            this.clearAttackerBoard();
+                            this.renderSelectedBoard(alivePlayer);
+                            return;
+                        }
 
                         this.showGrid();
+                        this.smallEventListeners();
                         const smallBoard = document.querySelector(`#small-board-${data.opponentNumber}`);
                         if(smallBoard) {
                             const clone = smallBoard.cloneNode(true) as HTMLElement;
                             clone.classList.remove("small-board");
                             clone.classList.add("defeated-board");
                             smallBoard.parentNode?.replaceChild(clone, smallBoard);
-                        }
-
-                        this.playersLeft -= 1;
-                        this.alive[data.opponentNumber-1] = false;
-                        if (this.playersLeft === 1) {
-                            console.log(`Player ${data.playerNumber} is the last one standing!`);
-                            this.stopGame(data.playerNumber);
                         }
                     }
                 }
@@ -306,10 +343,30 @@ export class Game {
                         board?.renderattacker(i, this.usernames[i-1][0]); 
                     }
                 }
-                this.smallEventListeners();
-                this.showGrid();
+                if (this.playersLeft === 2 ){
+                    var alivePlayers = this.getTrueIndices(this.alive);
+                    if (alivePlayers.length != 2){
+                        console.log("Error: More than 2 players are alive.");
+                        return;
+                    }
+                    var alivePlayer = alivePlayers[0]+1;
+                    if (alivePlayer == this.myPlayerNumber){
+                        alivePlayer = alivePlayers[1]+1;
+                    }
+                    this.clearBoardGrid();
+                    this.clearAttackerBoard();
+                    this.renderSelectedBoard(alivePlayer);
+                }
+                else {
+                    this.smallEventListeners();
+                    this.showGrid();
+                }
             }
             opponentBoard.updateCellDisplay(data.row, data.column, data.hit, false, data.opponentNumber);
+            if (this.playersLeft === 1) {
+                console.log(`Player ${data.playerNumber} is the last one standing!`);
+                this.stopGame(data.playerNumber);
+            }
         }
     }
     

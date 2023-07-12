@@ -1,12 +1,5 @@
 // src/backend/models/game.ts
 
-// export type Ship = {
-//     type: string;
-//     shape: string[][];
-//     position: { row: number; column: number };
-//     orientation: 'horizontal' | 'vertical';
-// };
-
 export type Cell = {
     hasShip: boolean;
     isHit: boolean;
