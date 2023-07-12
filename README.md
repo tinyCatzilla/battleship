@@ -9,14 +9,14 @@
 <br>
 <h3 align="center"> cat.leship: Online, multiplayer battleship.</h3>
 <br/>
-<p align="center"><strong>FUN! FUN! FUN! -</strong> cat.leship is the best webgame on the market. For the low, low price of $3500, a medium-risk blood pact[^1], and your first-born child - you too can play battleship with all your friends! </p>
+<p align="center"><strong>FUN! FUN! FUN! -</strong> cat.leship is the best webgame on the market. For the low, low price of $3500, a medium-risk blood pact, and your first-born child - you too can play battleship with all your friends! </p>
 
 <p align="center">Inspired by a website I stole assets from, cat.leship is designed to be as fun as possible.</p>
 
 
 <p align="center">
 • Lightweight, although not reliable<br/>
-• Unmantained<br/>
+• Unmaintained<br/>
 • Written by a first time Typescript user</p>
 </p>
 
@@ -45,7 +45,3 @@
 3. `yarn start`
 4. Navigate to `localhost:5000`
 5. Play cat.leship :3
-
-
-<br/><br/>
-*[^1]: Contact me by snail mail.*
