@@ -191,7 +191,7 @@ table {
 }
 
 
-/* DARK MODE CHANGES, ORIGINAL COMMENTED OUT BELOW UNTIL .sunk { */
+/* DARK MODE CHANGES, ORIGINAL COMMENTED OUT BELOW UNTIL .sunk */
 
 .board-cell, .board-cell-small, .board-cell-player, .board-cell-attacker, .board-cell-active {
     /* border: 1px solid rgba(0, 0, 0, 0.301);
@@ -459,5 +459,5 @@ table {
     font-size: var(--font-large);
     text-align: center;
     color: var(--text-light-secondary);
-    margin-bottom: 30px;
+    margin-bottom: 40px;
 }
