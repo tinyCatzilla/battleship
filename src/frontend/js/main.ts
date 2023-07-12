@@ -10,6 +10,7 @@ class GameClient {
     usernames: string[];
     private playerBoard: Board;
     turn: number;
+    started: boolean;
 
     constructor() {
         this.socket = new WebSocket("ws://localhost:3050");
@@ -20,6 +21,7 @@ class GameClient {
         this.usernames = [];
         this.playerBoard = new Board();
         this.turn = -1;
+        this.started = false;
 
         this.socket.onmessage = (event) => {
             const data = JSON.parse(event.data);
@@ -28,6 +30,7 @@ class GameClient {
             }
             else if (data.type === 'joinGame'){
                 if (data.success === true) {
+                    this.displayLobbyScreen();
                     history.pushState({}, '', `/${this.gameId}`);
                     this.playerNumber = data.playerNumber; // use the player number sent by the server
                     this.game = new Game(this.gameId, this.playerNumber);
@@ -36,21 +39,11 @@ class GameClient {
                     lobbyCode.textContent = `${this.gameId}`;
                 } else {
                     // Handle the case where joining the game was not successful
-                    alert("Failed to join the game.");
+                    alert("Failed to join the game, game already started.");
                 }
             }
             else if (data.type === 'leaveGame') {
-                if (data.success === true) {
-                    history.pushState({}, '', `/`);
-                    this.gameId = "";
-                    this.playerNumber = -1;
-                    this.unrender();
-                    this.game = new Game(this.gameId, this.playerNumber);
-                    this.displayTitleScreen();
-                } else {
-                    // Handle the case where leaving the game was not successful
-                    alert("Failed to leave the game.");
-                }
+                this.handleLeaveGame(data);
             }
             else if (data.type === 'confirmPlacement') {
                 this.handleConfirmPlacement(data);
@@ -62,13 +55,28 @@ class GameClient {
                 this.game.playersLeft = data.totalPlayers;
                 this.game.turn = data.turn;
                 this.game.usernames = this.usernames;
+                this.started = true;
+                this.game.started = true;
                 this.turn = data.turn;
-                this.game.startGame();
+                this.game.startGame(this.playerBoard);
                 console.log('all players ready, starting game');
             }
             else if (data.type === 'nextturn'){
                 console.log('nextturn received');
                 this.turn = data.opponentNumber;
+            }
+            else if (data.type === 'chat'){
+                console.log('chat received');
+                const chatDivs = document.querySelectorAll(".chat");
+                for (let chatDiv of chatDivs) {
+                    let messageElement = document.createElement("p");
+                    messageElement.classList.add("chatMessage");
+                    messageElement.textContent = data.username + ": " + data.message;
+                    if (chatDiv) chatDiv.appendChild(messageElement);
+                }
+            }
+            else if (data.type === 'error'){
+                alert(data.message);
             }
         };
     }
@@ -77,6 +85,64 @@ class GameClient {
         this.usernames = data.usernames;
         console.log('usernames:', this.usernames);
         this.updateUsers();
+    }
+
+    handleLeaveGame(data: any) {
+        if (data.playerNumber === this.playerNumber){
+            if (data.success === true) {
+                history.pushState({}, '', `/`);
+                this.gameId = "";
+                this.playerNumber = -1;
+                this.unrender();
+                this.game = new Game(this.gameId, this.playerNumber);
+                this.displayTitleScreen();
+                this.unlockConfirmPlacementButton();
+                this.playerBoard.unlockBoard();
+                const playerBoard = document.querySelector(".playerBoard") as HTMLElement;
+                if (playerBoard) playerBoard.innerHTML = '';
+                
+                const attackerBoard = document.querySelector(".attackerBoard") as HTMLElement;
+                if (attackerBoard) attackerBoard.innerHTML = '';
+                
+                const boardGrid = document.querySelector(".boardGrid") as HTMLElement;
+                if (boardGrid) boardGrid.innerHTML = '';
+
+                const activeBoard = document.querySelector(".activeBoard") as HTMLElement;
+                if (activeBoard) activeBoard.innerHTML = '';
+
+                const chats = document.querySelectorAll(".chat");
+                for (let chat of chats) {
+                    if (chat.parentElement?.classList.contains("lobbyMain")) { // if chat's parent is lobbyMain, get children
+                        for (let child of chat.children) {
+                            if (child.classList.contains("chatMessage")) {
+                                chat.removeChild(child);
+                            }
+                        }
+                    }
+                    else { // delete chat if it's not lobby chat
+                        chat.parentElement?.removeChild(chat);
+                    }
+                }
+
+                const gameBoard = document.querySelector(".gameBoard") as HTMLElement;
+                if (gameBoard) gameBoard.innerHTML = '';
+
+                const playerList = document.querySelector(".playerList") as HTMLElement;
+                if (playerList) playerList.innerHTML = '';
+
+                const lobbyCode = document.querySelector("#lobbyCode") as HTMLElement;
+                if (lobbyCode) lobbyCode.innerHTML = '';
+            } else {
+                // Handle the case where leaving the game was not successful
+                alert("Failed to leave the game.");
+            }
+        }
+        else {
+            if (data.playerNumber < this.playerNumber && data.success === true && this.started === false) {
+                this.playerNumber -= 1;
+                this.game.myPlayerNumber -= 1;
+            }
+        }
     }
 
     handleConfirmPlacement(data: any) {
@@ -118,7 +184,6 @@ class GameClient {
         }
         // todo: check if room code meets format
         else {
-            this.displayLobbyScreen();
             // Send the join room request to the server
             this.socket.send(JSON.stringify({type: 'joinGame', data: {gameId: id, username: username}}));
             this.username = username;
@@ -127,10 +192,9 @@ class GameClient {
     }
     
     leaveRoom() {
-         // Send the leave room request to the server
-        this.socket.send(JSON.stringify({ type: 'leaveGame', data: {gameId: this.gameId} }));
-        this.unlockConfirmPlacementButton();
-            // TODO IMPORTANT: PLAYER 1 LEAVING GAME
+        // Send the leave room request to the server
+        console.log(this.playerNumber)
+        this.socket.send(JSON.stringify({ type: 'leaveGame', data: {gameId: this.gameId, playerNumber: this.playerNumber, isReady: this.usernames[this.playerNumber-1][1]} }))
     }
 
     render() {
@@ -163,6 +227,10 @@ class GameClient {
         }
     }
 
+    sendMessage(message: string) {
+        this.socket.send(JSON.stringify({type: 'chat', data: {gameId: this.gameId, username: this.username, message: message }}));
+    }
+
     confirmPlacement() {
         // Send a message to the backend indicating that the player has confirmed their placement
         this.socket.send(JSON.stringify({ type: "confirmPlacement", data: { gameId: this.gameId, playerNumber: this.playerNumber, shipCells: this.playerBoard.getShips.shipCells} }));
@@ -188,6 +256,8 @@ class GameClient {
         titleScreen?.style.setProperty("display", "block");
         let lobbyScreen = document.querySelector(".lobbyScreen") as HTMLElement;
         lobbyScreen?.style.setProperty("display", "none");
+        const winScreen = document.querySelector(".winScreen") as HTMLElement;
+        winScreen?.style.setProperty("display", "none");
         let gameScreen = document.querySelector(".gameScreen") as HTMLElement;
         gameScreen?.style.setProperty("display", "none");
         const leaveRoomButton = document.querySelector("#leaveRoomButton") as HTMLElement;
@@ -197,6 +267,8 @@ class GameClient {
     displayLobbyScreen() {
         let titleScreen = document.querySelector(".titleScreen") as HTMLElement;
         titleScreen?.style.setProperty("display", "none");
+        const winScreen = document.querySelector(".winScreen") as HTMLElement;
+        winScreen?.style.setProperty("display", "none");
         let lobbyScreen = document.querySelector(".lobbyScreen") as HTMLElement;
         lobbyScreen?.style.setProperty("display", "flex");
         const leaveRoomButton = document.querySelector("#leaveRoomButton") as HTMLElement;
@@ -204,10 +276,44 @@ class GameClient {
     }
 
     displayGameScreen() {
-        let lobbyScreen = document.querySelector(".lobbyScreen") as HTMLElement;
-        lobbyScreen?.style.setProperty("display", "none");
         let gameScreen = document.querySelector(".gameScreen") as HTMLElement;
         gameScreen?.style.setProperty("display", "flex");
+
+        const chat = document.querySelector(".chat") as HTMLElement;
+        const gameMain = document.querySelector(".gameMain") as HTMLElement;
+        this.cloneChat(chat, gameMain);
+
+        let lobbyScreen = document.querySelector(".lobbyScreen") as HTMLElement;
+        lobbyScreen?.style.setProperty("display", "none");
+
+    }
+
+    displayWinScreen() {
+
+    }
+
+    displayLoseScreen() {
+
+    }
+
+    // const clone = smallBoard.cloneNode(true) as HTMLElement;
+    //                         clone.classList.remove("small-board");
+    //                         clone.classList.add("defeated-board");
+    //                         smallBoard.parentNode?.replaceChild(clone, smallBoard);
+
+    cloneChat(chat: HTMLElement, toNext: HTMLElement) {
+        const chatClone = chat.cloneNode(true);
+        toNext.appendChild(chatClone);
+        // chat.remove(); // delete the chat from the previous screen
+        const chatInput = toNext.querySelector("#chatInput") as HTMLInputElement;
+        if (chatInput) {
+            chatInput.addEventListener("keypress", (event: KeyboardEvent) => {
+                if (event.key === "Enter") {
+                    this.sendMessage(chatInput.value);
+                    chatInput.value = ""; // Clear the input field
+                }
+            });
+        }
     }
 }
 
@@ -234,5 +340,15 @@ export function initializeApp() {
     const confirmButton = document.querySelector("#readyButton");
     if (confirmButton) {
         confirmButton.addEventListener("click", () => gameClient.confirmPlacement());
+    }
+
+    const chatInput = document.querySelector<HTMLInputElement>("#chatInput");
+    if (chatInput) {
+        chatInput.addEventListener("keypress", (event: KeyboardEvent) => {
+            if (event.key === "Enter") {
+                gameClient.sendMessage(chatInput.value);
+                chatInput.value = ""; // Clear the input field
+            }
+        });
     }
 }

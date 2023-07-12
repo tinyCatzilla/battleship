@@ -15,7 +15,8 @@
 
     <body>
         <div class="header">
-            <div class="logo"><a href="./" class="logo">cat.leship</a></div>
+            <div class="logo" onclick="gameClient.leaveRoom()">cat.leship</div>
+            <!-- <a href="./" class="logo"></a> -->
             <button id="leaveRoomButton" class="menuButton btnYellow">Leave Room</button>
         </div>
         <div class="main">
@@ -44,7 +45,7 @@
                         <button id="readyButton" class="menuButton btnGreen">Ready</button>
                     </div>
                     <div class="chat">
-                        hiii :3
+                        <input type="text" id="chatInput" placeholder="hiii :3" class="menuText">
                     </div>  
                 </div>
             </div>
@@ -61,9 +62,6 @@
                             <button id="backToGrid" class="menuButton backToGrid btnYellow">Back</button>   
                         </div>                     
                     </div>
-                    <div class="chat">
-                        hiii :3
-                    </div>                    
                 </div>
             </div>
             <div class="winScreen">

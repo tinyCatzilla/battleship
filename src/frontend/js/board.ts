@@ -28,8 +28,10 @@ export class Board {
         if (!boardDiv) return;
         // Render the board as an HTML table
         const boardElement = document.createElement('table');
+        boardElement.setAttribute('draggable', 'false');
         this.shipBoard.forEach((row, i) => {
             const rowElement = document.createElement('tr');
+            rowElement.setAttribute('draggable', 'false');
             row.forEach((cell, j) => {
                 const cellElement = document.createElement('td');
                 cellElement.setAttribute('data-row', i.toString());
@@ -71,7 +73,7 @@ export class Board {
     
             if (this.shipBoard[cellRow][cellColumn].hasShip) {
                 const shipCell = this.getShipCell(cellRow, cellColumn);
-                if (!shipCell || shipCell.shipId !== movingShipId) {
+                if (shipCell && shipCell.shipId !== movingShipId) {
                     return false;
                 }
             }
@@ -86,7 +88,7 @@ export class Board {
                     if (this.shipBoard[newRow][newCol].hasShip) {
                         // If the neighboring cell has a ship and it is not the moving ship
                         const neighbourCell = this.getShipCell(newRow, newCol);
-                        if (!neighbourCell || neighbourCell.shipId !== movingShipId) {
+                        if (neighbourCell && neighbourCell.shipId !== movingShipId) {
                             return false;
                         }
                     }
@@ -231,9 +233,11 @@ export class Board {
     }
     
     private dragStart = (e: DragEvent) => {
-        if (this.locked) return;
-
+        if (this.locked) e.preventDefault();
+        
         const target = e.target as HTMLElement;
+        if (!target.classList.contains('ship')) { e.preventDefault(); }
+        
         const row = +target.getAttribute('data-row')!;
         const column = +target.getAttribute('data-column')!;
         const shipCell = this.getShipCell(row, column)
@@ -401,6 +405,10 @@ export class Board {
         this.locked = true;
     }
 
+    unlockBoard() {
+        this.locked = false;
+    }
+
     rendersmall(playerNumber: number, username: string) {
         // creates an empty board in boardgrid
         const boardDiv = document.querySelector(".boardGrid");
@@ -432,6 +440,9 @@ export class Board {
                 }
                 if(this.sunkCells.has(cellId)) {
                     cellElement.classList.add('sunk');
+                }
+                if (this.shipBoard[i][j].hasShip) {
+                    cellElement.classList.add('ship');
                 }
                 cellElement.setAttribute('data-playerNumber', playerNumber.toString());
                 cellElement.classList.add('board-cell-small');
@@ -469,6 +480,9 @@ export class Board {
                 if(this.sunkCells.has(cellId)) {
                     cellElement.classList.add('sunk');
                 }
+                if (this.shipBoard[i][j].hasShip) {
+                    cellElement.classList.add('ship');
+                }
                 cellElement.setAttribute('data-playerNumber', playerNumber.toString());
                 cellElement.classList.add('board-cell-player');
                 rowElement.appendChild(cellElement);
@@ -503,6 +517,9 @@ export class Board {
                 }
                 if(this.sunkCells.has(cellId)) {
                     cellElement.classList.add('sunk');
+                }
+                if (this.shipBoard[i][j].hasShip) {
+                    cellElement.classList.add('ship');
                 }
                 cellElement.setAttribute('data-playerNumber', playerNumber.toString());
                 cellElement.classList.add('board-cell-attacker');
@@ -542,6 +559,9 @@ export class Board {
                 }
                 if(this.sunkCells.has(cellId)) {
                     cellElement.classList.add('sunk');
+                }
+                if (this.shipBoard[i][j].hasShip) {
+                    cellElement.classList.add('ship');
                 }
                 cellElement.setAttribute('data-playerNumber', playerNumber.toString());
                 cellElement.classList.add('board-cell-active');

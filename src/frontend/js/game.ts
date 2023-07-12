@@ -9,6 +9,8 @@ export class Game {
     playersLeft: number;
     turn: number;
     usernames: string[];
+    alive: boolean[];
+    started : boolean;
 
     constructor(gameId: string, myPlayerNumber: number) {
         this.gameId = gameId;
@@ -19,6 +21,8 @@ export class Game {
         this.playersLeft = -1;
         this.turn = -1;
         this.usernames = [];
+        this.alive = [];
+        this.started = false;
         
         this.socket.onmessage = (event) => {
             const data = JSON.parse(event.data);
@@ -37,6 +41,12 @@ export class Game {
                     console.log(data);
                     console.log('backToGrid received');
                     this.showGrid();
+                    break;
+                case 'leaveGame':
+                    console.log(data);
+                    console.log('leaveGame received');
+                    this.handlePlayerLeft(data);
+                    break;
             }
         };
     }
@@ -47,18 +57,29 @@ export class Game {
 
 
     
-    startGame() {
+    startGame(playerBoard: Board) {
         for (let i = 1; i <= this.totalPlayers; i++) {
+            this.alive[i-1] = true;
             var board = new Board();
             this.boards.set(i, board);
-            if (i != this.turn) {
+            if (i == this.myPlayerNumber) {
+                playerBoard.rendersmallplayer(i, this.usernames[i-1][0]);
+                if (i == this.turn){
+                    playerBoard.renderattacker(i, this.usernames[i-1][0]);
+                }
+                else{
+                    playerBoard.rendersmall(i, this.usernames[i-1][0]);
+                }
+                this.boards.set(i, playerBoard);
+                continue;
+            }
+            else if (i != this.turn) {
                 board.rendersmall(i, this.usernames[i-1][0]);
-            } else {
+            }
+            else {
                 board.renderattacker(i, this.usernames[i-1][0]); 
             }
         }
-        var playerboard = this.boards.get(this.myPlayerNumber);
-        playerboard?.rendersmallplayer(this.myPlayerNumber, this.usernames[this.myPlayerNumber-1][0]);
         this.socket.send(JSON.stringify({type: 'initGame', data:{gameId: this.gameId}}));
         this.smallEventListeners();
         this.showGrid();
@@ -72,7 +93,7 @@ export class Game {
         });
 
         const backToGrid = document.querySelector("#backToGrid") as HTMLElement; 
-        backToGrid.addEventListener("click", () => this.onBack());
+        if (backToGrid) backToGrid.addEventListener("click", () => this.onBack());
     }
  
     onSmallBoardClick = (e: MouseEvent) => {
@@ -93,12 +114,13 @@ export class Game {
         // Get both board elements
         const activeBoard = document.querySelector(".activeBoard") as HTMLElement;
         const boardGrid = document.querySelector(".boardGrid") as HTMLElement;
-        const backToGrid = document.querySelector("#backToGrid") as HTMLElement; 
+        const backToGrid = document.querySelector("#backToGrid") as HTMLElement;
+         
     
         // Show the active board and hide the small board
         if (activeBoard) activeBoard.style.display = "block";
         if (boardGrid) boardGrid.style.display = "none";
-        if (backToGrid) backToGrid.style.display = "block";
+        if (backToGrid && this.turn == this.myPlayerNumber) backToGrid.style.display = "block";
     
         // Render the selected board on the active board
         const board = this.boards.get(selectedBoardId);
@@ -139,11 +161,8 @@ export class Game {
         const boardDiv = document.querySelector(".attackerBoard");
         if (boardDiv) console.log("boardDiv found");
         else console.log("boardDiv not found");
-        let x = 0;
         while (boardDiv?.firstChild) {
             boardDiv.firstChild.remove();
-            x++;
-            console.log(x);
         }
     }
 
@@ -153,6 +172,47 @@ export class Game {
         while (boardDiv?.firstChild) {
             boardDiv.firstChild.remove();
         }
+    }
+
+    handlePlayerLeft(data: any) {
+        console.log('Player ' + data.playerNumber + ' left the game')
+        this.playersLeft -= 1;
+        this.alive[data.playerNumber-1] = false;
+        console.log(this.alive);
+        var firstalive = this.alive.indexOf(true)+1; 
+        console.log(firstalive);
+
+        if (this.playersLeft == 1 && this.myPlayerNumber == firstalive) {
+            console.log(`Player ${firstalive} is the last one standing!`);
+            this.stopGame(firstalive);
+        }
+
+        if (this.turn == data.playerNumber) {
+            console.log(`Player ${data.playerNumber} left the game while it was their turn`);
+            this.turn = firstalive;
+            
+            this.clearAttackerBoard(); // Clear the old attacker board
+            this.clearBoardGrid(); // Clear the old small board
+            for (let i = 1; i <= this.totalPlayers; i++) {
+                var board = this.boards.get(i);
+                if (i != this.turn) {
+                    board?.rendersmall(i, this.usernames[i-1][0]);
+                } else {
+                    board?.renderattacker(i, this.usernames[i-1][0]); 
+                }
+            }
+            this.smallEventListeners();
+        }
+
+        this.showGrid();
+
+        const smallBoard = document.querySelector(`#small-board-${data.playerNumber}`);
+        if(smallBoard) {
+            const clone = smallBoard.cloneNode(true) as HTMLElement;
+            clone.classList.remove("small-board");
+            clone.classList.add("defeated-board");
+            smallBoard.parentNode?.replaceChild(clone, smallBoard);
+        }   
     }
     
     fire = (e: MouseEvent) => {
@@ -214,14 +274,18 @@ export class Game {
                     });
                     if (data.gameOver) {
                         console.log(`Player ${data.opponentNumber} has no ships left!`);
+
+                        this.showGrid();
                         const smallBoard = document.querySelector(`#small-board-${data.opponentNumber}`);
                         if(smallBoard) {
                             const clone = smallBoard.cloneNode(true) as HTMLElement;
+                            clone.classList.remove("small-board");
                             clone.classList.add("defeated-board");
                             smallBoard.parentNode?.replaceChild(clone, smallBoard);
                         }
-                        
+
                         this.playersLeft -= 1;
+                        this.alive[data.opponentNumber-1] = false;
                         if (this.playersLeft === 1) {
                             console.log(`Player ${data.playerNumber} is the last one standing!`);
                             this.stopGame(data.playerNumber);
@@ -252,22 +316,49 @@ export class Game {
 
     stopGame(winner: number) {
         console.log("Game has been stopped.");
+
+        const leaveRoomButton = document.querySelector("#leaveRoomButton") as HTMLElement;
+        if (leaveRoomButton) leaveRoomButton.style.display = "none";
+
+        const playerBoard = document.querySelector(".playerBoard") as HTMLElement;
+        if (playerBoard) playerBoard.innerHTML = '';
+        
+        const attackerBoard = document.querySelector(".attackerBoard") as HTMLElement;
+        if (attackerBoard) attackerBoard.innerHTML = '';
+        
+        const boardGrid = document.querySelector(".boardGrid") as HTMLElement;
+        if (boardGrid) boardGrid.innerHTML = '';
+
+        const centeredContainer = document.querySelector(".centeredContainer") as HTMLElement;
+        if (centeredContainer) centeredContainer.innerHTML = '';
+
+        const chats = document.querySelectorAll(".chat");
+        for (let chat of chats) {
+            if (chat.parentElement?.classList.contains("lobbyMain")) { // if chat's parent is lobbyMain, get children
+                for (let child of chat.children) {
+                    if (child.classList.contains("chatMessage")) {
+                        chat.removeChild(child);
+                    }
+                }
+            }
+            else { // delete chat
+                chat.parentElement?.removeChild(chat);
+            }
+        }
+
+        const gameBoard = document.querySelector(".gameBoard") as HTMLElement;
+        if (gameBoard) gameBoard.innerHTML = '';
+
+        const playerList = document.querySelector(".playerList") as HTMLElement;
+        if (playerList) playerList.innerHTML = '';
+
+        const lobbyCode = document.querySelector("#lobbyCode") as HTMLElement;
+        if (lobbyCode) lobbyCode.innerHTML = '';
+
     
         // Hide the game screen
         const gameScreen = document.querySelector(".gameScreen") as HTMLElement;
         if (gameScreen) gameScreen.style.display = 'none';
-    
-        // // Create a win screen
-        // const winScreen = document.createElement('div');
-        // winScreen.classList.add('win-screen');
-    
-        // const winnerAlert = document.createElement('h1');
-        // winnerAlert.classList.add('winner-alert');
-        // winnerAlert.textContent = `Congratulations! Player ${winner} has won!`;
-    
-        // winScreen.appendChild(winnerAlert);
-        // document.body.appendChild(winScreen);
-
 
         const subHeadings = [
             "Congratulations!",
@@ -301,5 +392,6 @@ export class Game {
         });
         winScreen.appendChild(playAgain);
         
+        this.socket.send(JSON.stringify({type: 'stop', data: {gameId: this.gameId}}));
     }
 }
