@@ -1,4 +1,4 @@
-<p align="center"><a href="https://kwii.tk" target="_blank" rel="noreferrer noopener"><img width="150" alt="Ecosia Darkmode Logo" src="https://media.discordapp.net/attachments/552704543339839528/1128814738151850135/shield-cat-solid3.png?width=750&height=681"></a></p>
+<p align="center"><a href="" target="_blank" rel="noreferrer noopener"><img width="150" alt="cat.leship logo" src="https://media.discordapp.net/attachments/552704543339839528/1128814738151850135/shield-cat-solid3.png?width=750&height=681"></a></p>
 <h1 align="center">Battleship!!! (CAT.LESHIP!!)<br/><br/></h1>
 
 <h2 align="center">

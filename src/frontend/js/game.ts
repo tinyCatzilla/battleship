@@ -429,16 +429,12 @@ export class Game {
 
         const centeredContainer = document.querySelector(".centeredContainer") as HTMLElement;
         if (centeredContainer) centeredContainer.innerHTML = '';
-
+        
         const chats = document.querySelectorAll(".chat");
         for (let chat of chats) {
             if (chat.parentElement?.classList.contains("lobbyMain")) { // if chat's parent is lobbyMain, get chatMessages div
-                const chatMessages = chat.querySelectorAll(".chatMessages");
-                for (let child of chatMessages) {
-                    // if (child.classList.contains("chatMessage")) {
-                        chat.removeChild(child);
-                    // }
-                }
+                const chatMessages = chat.querySelector(".chatMessages") as HTMLElement;
+                chatMessages.innerHTML = '';
             }
             else { // delete chat if it's not lobby chat
                 chat.parentElement?.removeChild(chat);

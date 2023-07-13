@@ -134,12 +134,8 @@ class GameClient {
                 const chats = document.querySelectorAll(".chat");
                 for (let chat of chats) {
                     if (chat.parentElement?.classList.contains("lobbyMain")) { // if chat's parent is lobbyMain, get chatMessages div
-                        const chatMessages = chat.querySelectorAll(".chatMessages");
-                        for (let child of chatMessages) {
-                            // if (child.classList.contains("chatMessage")) {
-                                chat.removeChild(child);
-                            // }
-                        }
+                        const chatMessages = chat.querySelector(".chatMessages") as HTMLElement;
+                        chatMessages.innerHTML = '';
                     }
                     else { // delete chat if it's not lobby chat
                         chat.parentElement?.removeChild(chat);
@@ -215,7 +211,6 @@ class GameClient {
     
     leaveRoom() {
         // Send the leave room request to the server
-        console.log(this.playerNumber)
         this.socket.send(JSON.stringify({ type: 'leaveGame', data: {gameId: this.gameId, playerNumber: this.playerNumber, isReady: this.usernames[this.playerNumber-1][1]} }))
     }
 
@@ -375,11 +370,16 @@ export function initializeApp() {
         });
     }
 
-    window.addEventListener("beforeunload", function (e) {
-        console.log("beforeunload window :(");
-        e.preventDefault();
-        return 'please Leave any games before going - it may cause issues for the other players :(';
-    });
+    const logo = document.querySelector(".logo") as HTMLElement;
+    if (logo) {
+        logo.addEventListener("click", () => {if(gameClient.gameId != "") gameClient.leaveRoom()});
+    }
+
+    // window.addEventListener("beforeunload", function (e) {
+    //     console.log("beforeunload window :(");
+    //     e.preventDefault();
+    //     return 'please Leave any games before going - it may cause issues for the other players :(';
+    // });
     
     window.addEventListener("unload", function (e) {
         console.log("unloading window :(");
