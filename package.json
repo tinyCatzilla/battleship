@@ -1,20 +1,20 @@
 {
   "name": "battleship",
+  "packageManager": "yarn@3.6.1",
   "version": "1.0.1",
   "main": "index.js",
   "repository": "https://github.com/tinyCatzilla/battleship.git",
   "author": "catzilla",
-  "license": "MIT",
   "type": "module",
   "devDependencies": {
-  },
-  "dependencies": {
     "@types/express": "^4.17.17",
     "@types/node": "^20.4.1",
     "@types/ws": "^8.5.5",
     "ts-node": "^10.9.1",
     "tsc-watch": "^6.0.4",
-    "typescript": "^5.1.6",
+    "typescript": "^5.1.6"
+  },
+  "dependencies": {
     "concurrently": "^8.2.0",
     "copyfiles": "^2.4.1",
     "dotenv": "^16.3.1",
