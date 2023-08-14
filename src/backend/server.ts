@@ -1,13 +1,13 @@
 import express, { Request, Response } from 'express';
 import gameRoutes from './gameRoutes.js';
 import { GameService } from './gameService.js';
-import http from 'http';
+import config from '../config/appConfig.js';
 import { WebSocketServer } from 'ws';
+import http from 'http';
 import WS from 'ws';
 
 // Initialize express app
 const app = express();
-const PORT = process.env.PORT || 3000;
 
 // Middleware to parse JSON
 app.use(express.json());
@@ -117,11 +117,8 @@ wss.on('connection', (ws: WS) => {
                             console.log('startGame for client in', data.gameId);
                         }
                         console.log('confirmPlacement', data.gameId);
-
-
                         const usernameReady = service.usernames.get(data.gameId)![data.playerNumber - 1][0];
                         broadcast(data.gameId,{ type: 'chatAlert', color: "txtGreen", message: usernameReady + " is ready." });
-
                         break;
                     case 'initGame':
                         addToGame(data.gameId, ws);
@@ -265,6 +262,6 @@ wss.on('connection', (ws: WS) => {
 
 
 // Start the HTTP server
-server.listen(3050, () => {
-    console.log('Listening on port 3050');
+server.listen(config.PORT, () => {
+    console.log(`Listening on port ${config.PORT}`);
 });

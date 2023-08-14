@@ -1,5 +1,6 @@
 import { Game } from "./game.js";
 import { Board } from './board.js';
+import config from '../../config/appConfig.js';
 
 class GameClient {
     socket: WebSocket;
@@ -13,7 +14,7 @@ class GameClient {
     started: boolean;
 
     constructor() {
-        this.socket = new WebSocket("ws://localhost:3050");
+        this.socket = new WebSocket(`${config.backendURL}`);
         this.gameId = "";
         this.playerNumber = -1; // -1 indicates that the player number has not been set
         this.game = new Game(this.gameId, this.playerNumber);

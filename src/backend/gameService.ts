@@ -168,7 +168,4 @@ export class GameService {
             return {hit: false, sunk: false, gameOver: false};
         }
     }
-    
-    
-    // Add other methods to manage the game state (e.g., make a move, check for win/lose, etc.)
 }

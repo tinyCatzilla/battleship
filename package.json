@@ -9,7 +9,6 @@
   "devDependencies": {
     "@types/express": "^4.17.17",
     "@types/node": "^20.4.1",
-    "@types/socket.io-client": "^3.0.0",
     "@types/ws": "^8.5.5",
     "copyfiles": "^2.4.1",
     "rimraf": "^5.0.1",
@@ -18,20 +17,25 @@
     "typescript": "^5.1.6"
   },
   "dependencies": {
+    "concurrently": "^8.2.0",
+    "dotenv": "^16.3.1",
     "express": "^4.18.2",
-    "socket.io": "^4.7.1",
-    "socket.io-client": "^4.7.1",
+    "serve": "^14.2.0",
     "ws": "^8.0.0"
   },
   "scripts": {
-    "start-backend": "tsc-watch --onSuccess \"node ./build/backend/server.js\" --project ./tsconfig.json",
-    "start-backend2": "tsc-watch --onSuccess \"nodemon ./build/backend/server.js\" --project ./tsconfig.json",
-    "start-frontend": "serve ./build/frontend -s -l 5000",
-    "build-frontend": "c --project tsconfig.json",
-    "start": "concurrently \"yarn build\" \"yarn start-backend\" \"yarn build-frontend\" \"yarn start-frontend\"",
     "clean": "rimraf build/",
     "copy-files": "copyfiles --all --up 1 --exclude \"./**/*.{ts,tsx}\" \"./src/**/*\" build/",
     "build": "yarn clean && tsc && yarn copy-files",
-    "dev": "concurrently \"yarn build\" \"yarn start-backend\" \"yarn build-frontend\" \"yarn start-frontend\""
+
+    "start-backend-dev": "tsc-watch --onSuccess \"node ./build/backend/server.js\" --project ./tsconfig.json",
+    "start-frontend-dev": "FRONTEND_PORT=$(cat .env | grep FRONTEND_PORT | cut -d '=' -f 2) && serve ./build/frontend -s -l $FRONTEND_PORT",
+    "build-frontend-dev": "tsc --project tsconfig.json",
+    "dev": "concurrently \"yarn build\" \"yarn start-backend-dev\" \"yarn build-frontend-dev\" \"yarn start-frontend-dev\"",
+
+    "start-backend-prod": "tsc && pm2 start ./build/backend/server.js --name \"webgame-backend\"",
+    "start-frontend-prod": "serve ./build/frontend -s",
+    "ngrok-backend": "BACKEND_PORT=$(cat .env | grep BACKEND_PORT | cut -d '=' -f 2) && ngrok http --domain=daring-titmouse-profound.ngrok-free.app $BACKEND_PORT",
+    "start": "concurrently \"yarn build\" \"yarn start-backend-prod\" \"yarn start-frontend-prod\" \"yarn ngrok-backend\""
   }
 }
