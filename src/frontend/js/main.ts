@@ -13,7 +13,7 @@ class GameClient {
     started: boolean;
 
     constructor() {
-        this.socket = new WebSocket(`daring-titmouse-profound.ngrok-free.app`);
+        this.socket = new WebSocket('daring-titmouse-profound.ngrok-free.app');
         this.gameId = "";
         this.playerNumber = -1; // -1 indicates that the player number has not been set
         this.game = new Game(this.gameId, this.playerNumber);
