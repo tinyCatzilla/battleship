@@ -16,7 +16,7 @@
 
 <p align="center">
 • Lightweight, although not reliable.<br/>
-• Unmaintained.<br/>
+• semi-maintained<br/>
 • Written by a first time Typescript user!</p>
 </p>
 
