@@ -19,6 +19,7 @@
     "copyfiles": "^2.4.1",
     "dotenv": "^16.3.1",
     "express": "^4.18.2",
+    "pm2": "^5.3.0",
     "rimraf": "^5.0.1",
     "serve": "^14.2.0",
     "ws": "^8.0.0"
@@ -31,8 +32,8 @@
     "start-frontend-dev": "FRONTEND_PORT=$(cat .env | grep FRONTEND_PORT | cut -d '=' -f 2) && serve ./build/frontend -s -l $FRONTEND_PORT",
     "build-frontend-dev": "tsc --project tsconfig.json",
     "dev": "concurrently \"yarn build\" \"yarn start-backend-dev\" \"yarn build-frontend-dev\" \"yarn start-frontend-dev\"",
+    "start-frontend-prod": "FRONTEND_PORT=$(cat .env | grep FRONTEND_PORT | cut -d '=' -f 2) && serve ./build/frontend -s -l $FRONTEND_PORT",
     "start-backend-prod": "tsc && pm2 start ./build/backend/server.js --name \"webgame-backend\"",
-    "start-frontend-prod": "serve ./build/frontend -s cat.leship.catzilla.me",
     "ngrok-backend": "BACKEND_PORT=$(cat .env | grep BACKEND_PORT | cut -d '=' -f 2) && ngrok http --domain=daring-titmouse-profound.ngrok-free.app $BACKEND_PORT",
     "start": "concurrently \"yarn build\" \"yarn start-backend-prod\" \"yarn start-frontend-prod\" \"yarn ngrok-backend\""
   }
