@@ -32,7 +32,7 @@
     "build-frontend-dev": "tsc --project tsconfig.json",
     "dev": "concurrently \"yarn build\" \"yarn start-backend-dev\" \"yarn build-frontend-dev\" \"yarn start-frontend-dev\"",
     "start-backend-prod": "tsc && pm2 start ./build/backend/server.js --name \"webgame-backend\"",
-    "start-frontend-prod": "serve ./build/frontend -s",
+    "start-frontend-prod": "serve ./build/frontend -s cat.leship.catzilla.me",
     "ngrok-backend": "BACKEND_PORT=$(cat .env | grep BACKEND_PORT | cut -d '=' -f 2) && ngrok http --domain=daring-titmouse-profound.ngrok-free.app $BACKEND_PORT",
     "start": "concurrently \"yarn build\" \"yarn start-backend-prod\" \"yarn start-frontend-prod\" \"yarn ngrok-backend\""
   }
