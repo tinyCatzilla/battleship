@@ -1,5 +1,4 @@
 import { Board } from './board.js';
-import config from '../../config/appConfig.js';
 
 export class Game {
     private gameId: string;
@@ -16,7 +15,7 @@ export class Game {
     constructor(gameId: string, myPlayerNumber: number) {
         this.gameId = gameId;
         this.boards = new Map();
-        this.socket = new WebSocket(`${config.backendURL}/${gameId}`);
+        this.socket = new WebSocket(`daring-titmouse-profound.ngrok-free.app/${gameId}`);
         this.myPlayerNumber = myPlayerNumber;
         this.totalPlayers = -1;
         this.playersLeft = -1;
