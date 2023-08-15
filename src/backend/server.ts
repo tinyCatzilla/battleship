@@ -5,15 +5,35 @@ import config from '../config/appConfig.js';
 import { WebSocketServer } from 'ws';
 import http from 'http';
 import WS from 'ws';
+import cors from 'cors';
+
+import { JSDOM } from 'jsdom';
+import DOMPurify from 'dompurify';
 
 // Initialize express app
 const app = express();
+
+const allowedOrigins = ['https://catleship.catzilla.me'];
+
+const corsOptions: cors.CorsOptions = {
+  origin: (origin:any, callback:any) => {
+    if (!origin) return callback(null, true);
+    if (allowedOrigins.indexOf(origin) === -1) {
+      const msg = `The CORS policy for this site does not allow access from the specified Origin.`;
+      return callback(new Error(msg), false);
+    }
+    return callback(null, true);
+  }
+};
+
+// Use the CORS middleware with the provided options
+app.use(cors(corsOptions));
 
 // Middleware to parse JSON
 app.use(express.json());
 
 // Register game routes
-app.use('/api', gameRoutes);
+app.use('/api', gameRoutes);    
 
 // Simple route for testing if the server is running
 app.get('/', (req: Request, res: Response) => {
@@ -84,7 +104,13 @@ wss.on('connection', (ws: WS) => {
                             break;
                         }
                         console.log('leaveGame result:', leaveResult);
-                        if (leaveResult.started){
+                        if (leaveResult.justStarted){
+                            const startGame = service.startGame(data.gameId);
+                            const totalPlayers = service.getTotalPlayers(data.gameId);
+                            broadcast(data.gameId,{ type: 'startGame', totalPlayers: totalPlayers, turn: startGame.turn});
+                            console.log('startGame for client in', data.gameId);
+                        }
+                        else if (leaveResult.started){
                             console.log('broadcast leaveGame to game:', data.gameId)
                             broadcastToGame(data.gameId,{ type: 'leaveGame', success: leaveResult.success, playerNumber: data.playerNumber });
                         } 
@@ -174,7 +200,13 @@ wss.on('connection', (ws: WS) => {
                         break;
                     case 'chat':
                         console.log('chat data:', data);
-                        broadcast(data.gameId,{ type: 'chat', username: data.username, message: data.message });
+                        const window = new JSDOM('').window;
+                        const purify = DOMPurify(window);
+                        const clean = purify.sanitize(data.message);
+
+                        const escapedMessage = escapeHtml(clean);
+
+                        broadcast(data.gameId,{ type: 'chat', username: data.username, message: escapedMessage });
                         break;
                     case 'stop':
                         console.log('stopping game:', data);
@@ -190,10 +222,20 @@ wss.on('connection', (ws: WS) => {
     });
     ws.on('close', () => {
     });
+    function escapeHtml(text: string): string {
+        const map: { [key: string]: string } = {
+            '&': '&amp;',
+            '<': '&lt;',
+            '>': '&gt;',
+            '"': '&quot;',
+            "'": '&#039;'
+        };
+    
+        return text.replace(/[&<>"']/g, (m) => map[m]);
+    }    
 
     function broadcast(gameId: string, message: any) {
         const clients = gameClients.get(gameId) || [];
-        console.log('Broadcasting to gameClients:', gameId, 'Number of clients:', clients.length);
         clients.forEach((client: WS) => {
             if (client.readyState === WS.OPEN) {
                 client.send(JSON.stringify(message));
@@ -227,7 +269,6 @@ wss.on('connection', (ws: WS) => {
 
     function broadcastToGame(gameId: string, message: any) {
         const clients = games.get(gameId) || [];
-        console.log('Broadcasting to game:', gameId, 'Number of clients:', clients.length);
         clients.forEach((client: WS) => {
             if (client.readyState === WS.OPEN) {
                 client.send(JSON.stringify(message));

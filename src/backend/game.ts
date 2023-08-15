@@ -66,7 +66,7 @@ export class Game {
     }
 
     getShipCell(playerNumber: number, row: number, column: number) {
-        var shipCells = this.allshipCells.get(playerNumber)
+        let shipCells = this.allshipCells.get(playerNumber)
         if (!shipCells) {
             return undefined;
         }
@@ -92,30 +92,4 @@ export class Game {
     }
     
 }
-
-    // playerMakesMove(playerNumber: number, row: number, col: number) {
-    //     // First, check if it's the correct player's turn
-    //     if (this.playerTurn !== playerNumber) {
-    //       // It's not this player's turn, do nothing
-    //       return;
-    //     }
-    
-    //     // Get the opponent's board
-    //     const opponentBoard = this.boards[this.playerTurn === 0 ? 1 : 0];
-    
-    //     // Update the cell based on the move
-    //     if (opponentBoard[row][col].hasShip) {
-    //       // The player hit a ship
-    //       opponentBoard[row][col].isHit = true;
-    //     }
-    
-    //     // Change turns
-    //     this.changeTurns();
-    //   }
-
-    // changeTurns() {
-    // this.playerTurn = this.playerTurn 
-
-    // }
-
 

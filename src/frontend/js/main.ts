@@ -65,23 +65,26 @@ class GameClient {
                 console.log('nextturn received');
                 this.turn = data.opponentNumber;
             }
-            else if (data.type === 'chat'){
+            else if (data.type === 'chat') {
                 console.log('chat received');
                 const chatDivs = document.querySelectorAll(".chat");
                 for (let chatDiv of chatDivs) {
                     const messagesDiv = chatDiv.querySelector(".chatMessages");
-
+            
                     const nameSpan = document.createElement("span");
                     nameSpan.classList.add("chatName");
                     nameSpan.textContent = data.username + ": ";
-
+            
                     let messageElement = document.createElement("p");
                     messageElement.classList.add("chatMessage");
                     messageElement.appendChild(nameSpan);
-                    messageElement.innerHTML += data.message;
+            
+                    const textNode = document.createTextNode(data.message); // Safely create a text node for the message
+                    messageElement.appendChild(textNode);
+            
                     if (messagesDiv) messagesDiv.appendChild(messageElement);
                 }
-            }
+            }            
             else if (data.type === 'chatAlert') {
                 console.log('chat alert received');
                 const chatDivs = document.querySelectorAll(".chat");
@@ -335,6 +338,28 @@ class GameClient {
     }
 }
 
+function checkServerStatus() {
+    fetch('https://shipbackend.catzilla.me')
+        .then(response => response.text())
+        .then(text => {
+            if (text === 'Battleship Game Server is running!') {
+                // Server is running fine. Handle accordingly.
+            } else {
+                // Unexpected response. Server might be having issues.
+                notifyUserServerDown();
+            }
+        })
+        .catch(error => {
+            // Error might mean the server is down or unreachable.
+            notifyUserServerDown();
+        });
+}
+
+function notifyUserServerDown() {
+    // Display an alert, modal, banner, etc. to inform the user.
+    alert('Server is currently down. Please try again later.');
+}
+
 export function initializeApp() {
     const gameClient = new GameClient();
     const userInput = document.getElementById("username") as HTMLInputElement;
@@ -385,4 +410,7 @@ export function initializeApp() {
         console.log("unloading window :(");
         if (gameClient.gameId != "") gameClient.leaveRoom();
     });
+
+    // Set an interval to check the server status every 30 seconds.
+    setInterval(checkServerStatus, 30000);
 }

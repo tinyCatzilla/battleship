@@ -403,6 +403,12 @@ export class Board {
     lockBoard() {
         // locks when player ready
         this.locked = true;
+        // set all cells to not draggable
+        const cells = document.querySelectorAll<HTMLTableCellElement>('.board-cell');
+        cells.forEach((cell) => {
+            cell.setAttribute('draggable', 'false');
+        }
+        );
     }
 
     unlockBoard() {

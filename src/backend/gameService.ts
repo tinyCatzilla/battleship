@@ -3,6 +3,9 @@
 import {Game} from './game.js';
 import {Board} from './game.js';
 
+import createDOMPurify from 'dompurify';
+import { JSDOM } from 'jsdom';
+
 export class GameService {
     games: Map<string, Game>;
     // usernames: Map<string, string[]>;
@@ -14,17 +17,41 @@ export class GameService {
         this.usernames = new Map();
     }
 
+    escapeHtml(text: string): string {
+        const map: { [key: string]: string } = {
+            '&': '&amp;',
+            '<': '&lt;',
+            '>': '&gt;',
+            '"': '&quot;',
+            "'": '&#039;'
+        };
+    
+        return text.replace(/[&<>"']/g, (m) => map[m]);
+    }    
+
     createGame(gameId: string, username: string){
+        const window = new JSDOM('').window;
+        const DOMPurify = createDOMPurify(window);
+        const cleanUsername = DOMPurify.sanitize(username);
+
+        const escapedUsername = this.escapeHtml(cleanUsername);
+
         const game = new Game(gameId);
         this.games.set(gameId, game);
         if (!this.usernames.has(gameId)) {
-                this.usernames.set(gameId, [[username, 'notReady']]);
+                this.usernames.set(gameId, [[escapedUsername, 'notReady']]);
                 return;
             }
         // this.usernames.get(gameId)!.push(username);
     }
-
+    
     joinGame(gameId: string, username: string){
+        const window = new JSDOM('').window;
+        const DOMPurify = createDOMPurify(window);
+        const cleanUsername = DOMPurify.sanitize(username);
+
+        const escapedUsername = this.escapeHtml(cleanUsername);
+
         const game = this.games.get(gameId);
         if (game) {
             if (!this.usernames.has(gameId)) {
@@ -38,7 +65,7 @@ export class GameService {
             game.totalPlayers += 1;
             var newplayer = new Board();
             game.boards.push(newplayer.board); 
-            this.usernames.get(gameId)!.push([username, 'notReady']);
+            this.usernames.get(gameId)!.push([escapedUsername, 'notReady']);
             return {
                 success: true,
                 playerNumber: game.totalPlayers
@@ -53,6 +80,7 @@ export class GameService {
 
     leaveGame(gameId: string, playerNumber: number, isReady: string){
         const game = this.games.get(gameId);
+        let justStarted = false;
         if (game) {
             // Get array of usernames for this game
             let usernamesArray = this.usernames.get(gameId);
@@ -60,7 +88,7 @@ export class GameService {
 
             if (game.started === false) {
                 // Decrement total number of players
-                if (isReady === 'Ready') game.playersReady -= 1;
+                if (isReady === 'ready') game.playersReady -= 1;
                 if (usernamesArray) {
                     // Remove the leaving player's username
                     usernamesArray.splice(playerNumber-1, 1);
@@ -73,6 +101,12 @@ export class GameService {
                     this.games.delete(gameId);
                     this.usernames.delete(gameId);
                 }
+
+                if (game.playersReady === game.totalPlayers && game.totalPlayers > 1) {
+                    game.playerTurn = 1;
+                    game.started = true;
+                    justStarted = true;
+                }
             }
     
             return {
@@ -80,7 +114,8 @@ export class GameService {
                 playerNumber: playerNumber,
                 usernames: usernamesArray,
                 totalPlayers: game.totalPlayers,
-                started: game.started
+                started: game.started,
+                justStarted: justStarted
             };
         }
         return {
