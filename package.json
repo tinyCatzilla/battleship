@@ -32,9 +32,8 @@
     "start-frontend-dev": "FRONTEND_PORT=$(cat .env | grep FRONTEND_PORT | cut -d '=' -f 2) && serve ./build/frontend -s -l $FRONTEND_PORT",
     "build-frontend-dev": "tsc --project tsconfig.json",
     "dev": "concurrently \"yarn build\" \"yarn start-backend-dev\" \"yarn build-frontend-dev\" \"yarn start-frontend-dev\"",
-    "start-frontend-prod": "FRONTEND_PORT=$(cat .env | grep FRONTEND_PORT | cut -d '=' -f 2) && serve ./build/frontend -s -l $FRONTEND_PORT",
     "start-backend-prod": "tsc && pm2 start ./build/backend/server.js --name \"webgame-backend\"",
     "cf-tunnel-backend": "BACKEND_PORT=$(cat .env | grep BACKEND_PORT | cut -d '=' -f 2) && cloudflared tunnel run battleship",
-    "start": "concurrently \"yarn build\" \"yarn start-backend-prod\" \"yarn start-frontend-prod\" \"yarn cf-tunnel-backend\""
+    "start": "concurrently \"yarn build\" \"yarn start-backend-prod\" \"yarn cf-tunnel-backend\""
   }
 }
