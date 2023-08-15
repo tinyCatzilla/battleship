@@ -15,7 +15,7 @@ export class Game {
     constructor(gameId: string, myPlayerNumber: number) {
         this.gameId = gameId;
         this.boards = new Map();
-        this.socket = new WebSocket(`wss://daring-titmouse-profound.ngrok-free.app/${gameId}`);
+        this.socket = new WebSocket(`wss://shipbackend.catzilla.me/${gameId}`);
         this.myPlayerNumber = myPlayerNumber;
         this.totalPlayers = -1;
         this.playersLeft = -1;
