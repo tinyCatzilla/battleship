@@ -368,6 +368,8 @@ export class Board {
     
 
     private rotate = (e: MouseEvent) => {
+        if (this.locked) return;
+
         const target = e.target as HTMLElement;
         const rowAttr = target.getAttribute('data-row');
         const columnAttr = target.getAttribute('data-column');
@@ -406,6 +408,8 @@ export class Board {
         // set all cells to not draggable
         const cells = document.querySelectorAll<HTMLTableCellElement>('.board-cell');
         cells.forEach((cell) => {
+            cell.draggable = false;
+            cell.classList.add('not-draggable');
             cell.setAttribute('draggable', 'false');
         }
         );

@@ -7,3 +7,5 @@ build/
 .yarnrc.yml
 .editorconfig
 .gitattributes
+.vscode
+.yarn
