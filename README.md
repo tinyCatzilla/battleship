@@ -2,8 +2,7 @@
 <h1 align="center">Battleship!!! (CAT.LESHIP!!)<br/><br/></h1>
 
 <h2 align="center">
-<a rel="noreferrer noopener" href="#">Play Now! NOW!</a>
-(coming soon)
+<a rel="noreferrer noopener" href="https://catleship.catzilla.me">Play Now! NOW!</a>
 <br/><br/>
 </h2>
 <br>
@@ -17,10 +16,10 @@
 <p align="center">
 • Lightweight, although not reliable.<br/>
 • semi-maintained<br/>
-• Written by a first time Typescript user!</p>
+• Written by a first time Typescript user!
 </p>
+<br/>
 
-<br/><br/>
 ## 🚢 How To Play
 
 ### Placing ships:
@@ -36,12 +35,3 @@
 - Click on a cell to fire.
 - If you hit a ship, it stays your turn. If you missed, the turn transfers to the attacked player.
 - When there are just two players remaining, the game transitions to 1v1 mode, where you only view the other opponent's board.
-
-
-<br/><br/>
-## 🖥️ Local Installation
-1. Clone the repo
-2. `yarn install`
-3. `yarn start`
-4. Navigate to `localhost:5000`
-5. Play cat.leship :3
