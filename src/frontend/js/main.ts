@@ -339,9 +339,11 @@ class GameClient {
 }
 
 function checkServerStatus() {
+    console.log('checkServerStatus called')
     fetch('https://shipbackend.catzilla.me')
         .then(response => response.text())
         .then(text => {
+            console.log(text)
             if (text === 'Battleship Game Server is running!') {
                 // Server is running fine. Handle accordingly.
             } else {
@@ -413,4 +415,6 @@ export function initializeApp() {
 
     // Set an interval to check the server status every 30 seconds.
     setInterval(checkServerStatus, 30000);
+
+    checkServerStatus();
 }
